@@ -1,0 +1,2636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agew Midir High School | Official Academic Portal (Injibara)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans & Noto Sans Ethiopic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', '"Noto Sans Ethiopic"', 'sans-serif'],
+                    },
+                    colors: {
+                        school: {
+                            green: '#0f5132',
+                            greenDark: '#093621',
+                            gold: '#d97706',
+                            goldLight: '#fef3c7',
+                            crimson: '#b91c1c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Official Print Stylesheet for Student Report Cards */
+        @media print {
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .no-print, header, footer, #toast-container, #role-banner, #teacher-marks-panel, #student-lookup-card, #student-roster-card {
+                display: none !important;
+            }
+            main {
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            #section-marks {
+                display: block !important;
+            }
+            #student-transcript-container {
+                display: block !important;
+                box-shadow: none !important;
+                border: 2px solid #0f5132 !important;
+                border-radius: 0 !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="no-print fixed top-20 right-4 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-modal" class="no-print fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-100">
+            <div class="flex items-center gap-3 text-amber-600 mb-3">
+                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900" id="confirm-title">Confirm Action</h3>
+            </div>
+            <p class="text-slate-600 text-sm mb-6" id="confirm-message">Are you sure you want to proceed?</p>
+            <div class="flex justify-end gap-3">
+                <button id="confirm-cancel-btn" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
+                <button id="confirm-ok-btn" class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-red-600 hover:bg-red-700 transition">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication / Login Modal -->
+    <div id="auth-modal" class="no-print fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 my-auto">
+            <div class="bg-gradient-to-r from-school-green to-school-greenDark text-white px-6 py-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-amber-300">
+                        <i class="fa-solid fa-shield-halved text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-base sm:text-lg">Portal Sign-In</h3>
+                        <p class="text-xs text-emerald-100">Agew Midir High School • Injibara</p>
+                    </div>
+                </div>
+                <button onclick="closeAuthModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                    <button type="button" id="auth-tab-student" onclick="switchAuthTab('student')" class="py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-school-green shadow-sm transition">
+                        <i class="fa-solid fa-user-graduate mr-1.5"></i>Student Login
+                    </button>
+                    <button type="button" id="auth-tab-teacher" onclick="switchAuthTab('teacher')" class="py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition">
+                        <i class="fa-solid fa-chalkboard-user mr-1.5"></i>Teacher / Admin
+                    </button>
+                </div>
+
+                <!-- Student Login Form -->
+                <form id="student-login-form" onsubmit="handleStudentLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Student ID *</label>
+                        <input type="text" id="login-stu-id" required placeholder="e.g., AMHS-101" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm uppercase focus:ring-2 focus:ring-school-green focus:border-school-green">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Student Access PIN *</label>
+                        <input type="password" id="login-stu-pin" required placeholder="Enter 4-digit PIN (e.g., 1234)" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-school-green focus:border-school-green">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-school-green hover:bg-school-greenDark text-white font-bold text-sm shadow-md transition">
+                        Sign In to Student Portal
+                    </button>
+
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900 flex items-center justify-between gap-2">
+                        <div>
+                            <span class="font-bold block">Testing / Demo Student:</span>
+                            <span>ID: <code class="font-mono font-bold">AMHS-101</code> • PIN: <code class="font-mono font-bold">1234</code></span>
+                        </div>
+                        <button type="button" onclick="fillDemoStudentLogin()" class="px-3 py-1.5 rounded-lg bg-school-green text-white font-semibold hover:bg-school-greenDark transition shrink-0">
+                            Auto-Fill
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Teacher / Admin Login Form -->
+                <form id="teacher-login-form" onsubmit="handleTeacherLogin(event)" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Teacher / Admin Name *</label>
+                        <input type="text" id="login-admin-name" required value="Academic Registrar" placeholder="Enter your name" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-school-green">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Admin / Staff Passcode *</label>
+                        <input type="password" id="login-admin-pass" required placeholder="Enter Admin Passcode" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-school-green">
+                    </div>
+                    <button type="submit" class="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm shadow-md transition">
+                        Unlock Teacher / Admin Dashboard
+                    </button>
+
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-center justify-between gap-2">
+                        <div>
+                            <span class="font-bold block">Default Admin Passcode:</span>
+                            <span>Passcode: <code class="font-mono font-bold">AMHS2026</code></span>
+                        </div>
+                        <button type="button" onclick="fillDemoAdminLogin()" class="px-3 py-1.5 rounded-lg bg-amber-600 text-white font-semibold hover:bg-amber-700 transition shrink-0">
+                            Auto-Fill
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Setup, Data Sync & Netlify Deployment Guide Modal -->
+    <div id="guide-modal" class="no-print fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 my-auto">
+            <div class="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-server text-amber-400"></i>
+                    <h3 class="font-extrabold text-base sm:text-lg">Admin Setup, Cloud Sync & Deployment Guide</h3>
+                </div>
+                <button onclick="closeGuideModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4 text-sm text-slate-600 max-h-[75vh] overflow-y-auto">
+                <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 space-y-1">
+                    <h4 class="font-bold flex items-center gap-2"><i class="fa-solid fa-cloud-arrow-up text-school-green"></i> 1. Hosting on Netlify / Static Web</h4>
+                    <p class="text-xs leading-relaxed">This portal runs as a standalone <code class="font-mono bg-white px-1 rounded">index.html</code> file. Drag and drop this file into <strong>Netlify Drop</strong>, GitHub Pages, or Vercel to publish your school site with HTTPS.</p>
+                </div>
+                <div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-950 space-y-1">
+                    <h4 class="font-bold flex items-center gap-2"><i class="fa-solid fa-key text-amber-600"></i> 2. Default Credentials & Security</h4>
+                    <ul class="text-xs list-disc list-inside space-y-1">
+                        <li><strong>Default Teacher/Admin Passcode:</strong> <code class="font-mono font-bold bg-white px-1.5 py-0.5 rounded">AMHS2026</code></li>
+                        <li><strong>Student Access:</strong> Each student signs in with their unique <strong>Student ID</strong> (e.g., <code class="font-mono">AMHS-101</code>) and personal <strong>4-digit PIN</strong> (default <code class="font-mono">1234</code>).</li>
+                    </ul>
+                </div>
+                <div class="p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-950 space-y-1">
+                    <h4 class="font-bold flex items-center gap-2"><i class="fa-solid fa-database text-blue-600"></i> 3. Multi-Device Realtime Sync</h4>
+                    <p class="text-xs leading-relaxed">Connect a Firebase Realtime Database URL in the <em>Admin & Data Sync</em> tab so updates sync across connected browsers and devices.</p>
+                </div>
+            </div>
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex justify-end">
+                <button onclick="closeGuideModal()" class="px-5 py-2 rounded-xl bg-school-green text-white text-sm font-semibold hover:bg-school-greenDark">Got It</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Ethiopian Heritage Accent Strip -->
+    <div class="no-print h-1.5 w-full bg-gradient-to-r from-emerald-600 via-amber-400 to-red-600"></div>
+
+    <!-- Main Header & Navigation -->
+    <header class="no-print bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between py-3 gap-3">
+                
+                <!-- School Brand & Logo -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <!-- Custom SVG Emblem featuring AGEW -->
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-school-green to-emerald-950 text-white flex items-center justify-center shadow-md shrink-0 border-2 border-amber-400/70 p-1" aria-label="Agew Midir High School Logo">
+                            <svg viewBox="0 0 64 64" class="w-full h-full" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AGEW Emblem">
+                                <defs>
+                                    <linearGradient id="agewGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#fde68a" />
+                                        <stop offset="100%" stop-color="#f59e0b" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M32 4 L54 12 V29 C54 43.5 44.6 54.8 32 60 C19.4 54.8 10 43.5 10 29 V12 Z" fill="#093621" stroke="url(#agewGoldGrad)" stroke-width="2.5" />
+                                <polygon points="32,10 44,15 32,20 20,15" fill="url(#agewGoldGrad)" />
+                                <path d="M25 17.5 V22 C25 24 28.1 25.5 32 25.5 C35.9 25.5 39 24 39 22 V17.5" fill="none" stroke="#fde68a" stroke-width="1.8" stroke-linecap="round" />
+                                <rect x="11" y="28" width="42" height="14" rx="4" fill="#fef3c7" stroke="#d97706" stroke-width="1.4" />
+                                <text x="32" y="38.2" text-anchor="middle" font-family="'Plus Jakarta Sans', sans-serif" font-size="10.5" font-weight="900" letter-spacing="1.2" fill="#093621">AGEW</text>
+                                <line x1="20" y1="47" x2="27" y2="47" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" />
+                                <line x1="28.5" y1="47" x2="35.5" y2="47" stroke="#fbbf24" stroke-width="2.2" stroke-linecap="round" />
+                                <line x1="37" y1="47" x2="44" y2="47" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h1 class="text-base sm:text-xl font-extrabold text-slate-900 tracking-tight leading-none">
+                                    Agew Midir High School
+                                </h1>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-school-green">
+                                    Injibara • አገው ምድር
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Official Academic Portal • Grades 9–12</p>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Menu Toggle -->
+                    <button id="mobile-menu-btn" class="md:hidden p-2.5 rounded-xl text-slate-600 hover:bg-slate-100 focus:outline-none">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Session Status & Login Controls -->
+                <div class="flex flex-wrap items-center justify-between md:justify-end gap-2">
+                    <div id="sync-status-badge" class="px-2.5 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-600 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <span>Online Required</span>
+                    </div>
+
+                    <div id="session-controls" class="flex items-center gap-2"></div>
+
+                    <button onclick="openGuideModal()" title="Admin Setup & Deployment Guide" class="p-2.5 rounded-xl text-slate-600 hover:text-school-green hover:bg-emerald-50 border border-slate-200 transition text-xs font-semibold flex items-center gap-1.5">
+                        <i class="fa-solid fa-circle-question"></i>
+                        <span class="hidden lg:inline">Setup Guide</span>
+                    </button>
+
+                    <!-- Language Toggle (EN / አማ) -->
+                    <div class="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center gap-1" role="group" aria-label="Language Selector">
+                        <button type="button" id="lang-btn-en" onclick="setLanguage('en')" class="px-2.5 py-1.5 rounded-lg text-xs font-extrabold bg-white text-school-green shadow-xs transition">
+                            EN
+                        </button>
+                        <button type="button" id="lang-btn-am" onclick="setLanguage('am')" class="px-2.5 py-1.5 rounded-lg text-xs font-extrabold text-slate-600 hover:text-slate-900 transition">
+                            አማ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <nav id="main-nav" class="hidden md:flex items-center gap-1 pb-2 overflow-x-auto border-t border-slate-100 pt-2">
+                <button onclick="switchTab('marks')" data-tab="marks" class="nav-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition whitespace-nowrap bg-emerald-50 text-school-green">
+                    <i class="fa-solid fa-lock"></i>
+                    <span data-i18n="navMarks">Private Marks</span>
+                </button>
+                <button onclick="switchTab('calculator')" data-tab="calculator" class="nav-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-calculator text-school-green"></i>
+                    <span data-i18n="navCalculator">Mark Calculator</span>
+                </button>
+                <button onclick="switchTab('messages')" data-tab="messages" class="nav-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-comments text-school-green"></i>
+                    <span data-i18n="navMessages">Student Messages</span>
+                    <span id="nav-unread-count" class="hidden px-2 py-0.5 text-xs rounded-full bg-red-600 text-white font-extrabold">0</span>
+                </button>
+                <button onclick="switchTab('exams')" data-tab="exams" class="nav-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-file-pen"></i>
+                    <span data-i18n="navExams">Online Exams</span>
+                    <span id="nav-exam-count" class="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 font-extrabold">0</span>
+                </button>
+                <button onclick="switchTab('videos')" data-tab="videos" class="nav-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-600 hover:bg-slate-100">
+                    <i class="fa-brands fa-youtube text-red-600"></i>
+                    <span data-i18n="navVideos">YouTube Video Hub</span>
+                    <span id="nav-video-count" class="px-2 py-0.5 text-xs rounded-full bg-slate-200 text-slate-700 font-extrabold">0</span>
+                </button>
+                <button onclick="switchTab('resources')" data-tab="resources" class="nav-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-bullhorn text-amber-600"></i>
+                    <span data-i18n="navResources">Notices & Resources</span>
+                </button>
+                <button id="nav-tab-admin" onclick="switchTab('admin')" data-tab="admin" class="hidden nav-tab px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-database text-school-green"></i>
+                    <span data-i18n="navAdmin">Admin & Data Sync</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Role Context Banner -->
+    <div id="role-banner" class="no-print bg-gradient-to-r from-school-green to-school-greenDark text-white py-2.5 px-4 shadow-inner">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm">
+            <div class="flex items-center gap-2.5">
+                <span id="role-badge" class="px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold uppercase tracking-wider text-[11px]">Private Portal</span>
+                <p id="role-description" class="text-emerald-100">Student marks are strictly private. Sign in with your Student ID & PIN to view your report card or message classmates.</p>
+            </div>
+            <div class="text-emerald-200 font-medium flex items-center gap-2 shrink-0">
+                <i class="fa-regular fa-calendar"></i>
+                <span>2018/2019 E.C. • Semester I</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+        <!-- TAB 1: PRIVATE MARKS -->
+        <section id="section-marks" class="tab-section space-y-6">
+            <div id="teacher-marks-panel" class="no-print hidden bg-white rounded-2xl shadow-sm border border-amber-200 overflow-hidden">
+                <div class="bg-amber-50 px-6 py-4 border-b border-amber-200 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center">
+                            <i class="fa-solid fa-user-plus"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base sm:text-lg font-bold text-slate-900">Add Student & Manage Private Marks</h2>
+                            <p class="text-xs text-slate-600">Enroll a new student or update an existing student's marks.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="prepareNewStudentForm()" class="px-3.5 py-2 rounded-xl bg-school-green text-white text-xs font-bold hover:bg-school-greenDark transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>New Student</span>
+                        </button>
+                        <button type="button" onclick="toggleMarksForm()" id="toggle-marks-form-btn" class="px-3.5 py-2 rounded-xl bg-white border border-amber-300 text-amber-800 text-xs font-bold hover:bg-amber-100 transition">
+                            Hide Form
+                        </button>
+                    </div>
+                </div>
+
+                <form id="marks-entry-form" onsubmit="handleSaveStudentMarks(event)" class="p-6 space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Student ID *</label>
+                            <input type="text" id="form-stu-id" required placeholder="AMHS-109" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm uppercase focus:ring-2 focus:ring-school-green">
+                        </div>
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Full Name *</label>
+                            <input type="text" id="form-stu-name" required placeholder="e.g., Abebe Kebede" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-school-green">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Grade Level *</label>
+                            <select id="form-stu-grade" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+                                <option value="Grade 9">Grade 9</option>
+                                <option value="Grade 10">Grade 10</option>
+                                <option value="Grade 11">Grade 11</option>
+                                <option value="Grade 12">Grade 12</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Section & Conduct</label>
+                            <div class="flex gap-2">
+                                <select id="form-stu-section" required class="w-1/2 px-2.5 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+                                    <option value="A">Sec A</option>
+                                    <option value="B">Sec B</option>
+                                    <option value="C">Sec C</option>
+                                    <option value="D">Sec D</option>
+                                </select>
+                                <select id="form-stu-conduct" class="w-1/2 px-2.5 py-2 rounded-xl border border-slate-300 text-sm bg-white">
+                                    <option value="A">Cond: A</option>
+                                    <option value="B">Cond: B</option>
+                                    <option value="C">Cond: C</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Student PIN *</label>
+                            <input type="text" id="form-stu-pin" required value="1234" maxlength="8" placeholder="1234" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-mono focus:ring-2 focus:ring-school-green">
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Subject Marks (0 – 100%)</span>
+                            <button type="button" onclick="fillRandomMarks()" class="text-xs text-school-green hover:underline font-bold">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Auto-fill Sample Marks
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="subject-inputs-grid"></div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-end gap-3 pt-2 border-t border-slate-100">
+                        <button type="reset" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Clear</button>
+                        <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-school-green hover:bg-school-greenDark shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>Save Student & Marks</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="student-lookup-card" class="no-print bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-school-green" data-i18n="privateAccessBadge">
+                                STRICT PRIVATE ACCESS
+                            </span>
+                            <h2 class="text-xl font-extrabold text-slate-900" data-i18n="privateMarksHeading">Private Student Marks & Transcript</h2>
+                        </div>
+                        <p id="lookup-subtitle" class="text-sm text-slate-500 mt-1">Marks are strictly private. Sign in with your Student ID and 4-digit PIN to view your personal transcript.</p>
+                    </div>
+                    <div id="lookup-controls-area" class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto"></div>
+                </div>
+            </div>
+
+            <div id="student-transcript-container" class="hidden bg-white rounded-2xl shadow-lg border border-emerald-200 overflow-hidden transition-all"></div>
+
+            <div id="student-roster-card" class="no-print hidden bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70">
+                    <div>
+                        <h3 class="font-extrabold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-user-check text-school-green"></i>
+                            <span>Authorized Staff Marks Ledger (Private Records)</span>
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Visible only to signed-in Teachers & Administrators.</p>
+                    </div>
+                    <span id="student-count-badge" class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-school-green">0 Students</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                <th class="py-3.5 px-4">Grade Rank</th>
+                                <th class="py-3.5 px-4">Student ID</th>
+                                <th class="py-3.5 px-4">Full Name</th>
+                                <th class="py-3.5 px-4">Grade & Sec</th>
+                                <th class="py-3.5 px-4 text-right">Total (900)</th>
+                                <th class="py-3.5 px-4 text-right">Average</th>
+                                <th class="py-3.5 px-4 text-center">Status</th>
+                                <th class="py-3.5 px-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-roster-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: MARK CALCULATOR -->
+        <section id="section-calculator" class="tab-section hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 space-y-6">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-100 text-school-green" data-i18n="calcBadge">
+                                INTERACTIVE GRADE & GPA/AVG TOOL
+                            </span>
+                            <h2 id="calc-heading" class="text-xl font-extrabold text-slate-900" data-i18n="calcHeading">
+                                Student Mark Calculator
+                            </h2>
+                        </div>
+                        <p id="calc-subtitle" class="text-sm text-slate-500 mt-1" data-i18n="calcSubtitle">
+                            Calculate real-time totals, percentage averages, letter grades, and target scores across subjects with custom maximum marks.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" id="calc-load-saved-btn" onclick="loadSavedStudentMarksIntoCalculator()" class="hidden px-3.5 py-2 rounded-xl bg-emerald-50 text-school-green border border-emerald-200 hover:bg-emerald-100 text-xs font-bold transition items-center gap-1.5">
+                            <i class="fa-solid fa-user-check"></i>
+                            <span data-i18n="calcLoadSaved">Load My Saved Marks</span>
+                        </button>
+                        <button type="button" onclick="fillCalculatorSampleMarks()" class="px-3.5 py-2 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 text-xs font-bold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span data-i18n="calcSampleBtn">Sample Scores</span>
+                        </button>
+                        <button type="button" onclick="resetCalculatorMarks()" class="px-3.5 py-2 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 text-xs font-bold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span data-i18n="calcResetBtn">Reset / Clear</span>
+                        </button>
+                        <button type="button" onclick="printCalculatorSummary()" class="px-3.5 py-2 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+                            <i class="fa-solid fa-print"></i>
+                            <span data-i18n="calcPrintBtn">Print Summary</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                        <div class="text-xs font-bold uppercase text-slate-500" data-i18n="calcTotalLabel">Total Score</div>
+                        <div class="mt-1 flex items-baseline gap-1.5">
+                            <span id="calc-total-score" class="text-2xl sm:text-3xl font-extrabold text-slate-900">0</span>
+                            <span class="text-xs font-bold text-slate-400">/ <span id="calc-max-total">900</span></span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+                        <div class="text-xs font-bold uppercase text-school-green" data-i18n="calcAvgLabel">Percentage / Average</div>
+                        <div class="mt-1 flex items-baseline gap-2">
+                            <span id="calc-average-score" class="text-2xl sm:text-3xl font-extrabold text-school-green">0.0%</span>
+                            <span id="calc-letter-badge" class="px-2 py-0.5 rounded-lg border text-xs font-extrabold text-red-700 bg-red-50 border-red-200">F</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                        <div class="text-xs font-bold uppercase text-slate-500" data-i18n="calcStatusLabel">Standing / Status</div>
+                        <div id="calc-status-badge" class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 text-amber-900">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span data-i18n="calcStatusEnter">Enter Marks</span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200">
+                        <div class="text-xs font-bold uppercase text-amber-800" data-i18n="calcSubjectsLabel">Active Subjects</div>
+                        <div class="mt-1 flex items-baseline justify-between">
+                            <span id="calc-subject-count" class="text-2xl sm:text-3xl font-extrabold text-slate-900">9</span>
+                            <span id="calc-highest-lowest" class="text-[11px] font-semibold text-slate-600">High: 0 • Low: 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <form onsubmit="handleAddCalculatorSubject(event)" class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="calcAddSubName">Custom Subject Name</label>
+                        <input type="text" id="calc-new-sub-name" required placeholder="e.g., Civics / Economics / Lab" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-school-green">
+                    </div>
+                    <div class="w-full sm:w-32">
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="calcAddSubScore">Score</label>
+                        <input type="number" id="calc-new-sub-score" min="0" value="80" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-school-green">
+                    </div>
+                    <div class="w-full sm:w-32">
+                        <label class="block text-xs font-bold text-slate-700 mb-1" data-i18n="calcAddSubMax">Max Points</label>
+                        <input type="number" id="calc-new-sub-max" min="1" value="100" required class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-school-green">
+                    </div>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs font-bold transition flex items-center justify-center gap-1.5 h-[38px]">
+                        <i class="fa-solid fa-plus"></i>
+                        <span data-i18n="calcAddSubBtn">Add Subject</span>
+                    </button>
+                </form>
+
+                <div class="overflow-x-auto rounded-2xl border border-slate-200">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                <th class="py-3 px-4" data-i18n="calcColSubject">Subject</th>
+                                <th class="py-3 px-4 w-36" data-i18n="calcColScore">Score Earned</th>
+                                <th class="py-3 px-4 w-36" data-i18n="calcColMax">Max Mark (e.g. 20/50/100)</th>
+                                <th class="py-3 px-4 text-right" data-i18n="calcColPct">Subject %</th>
+                                <th class="py-3 px-4 text-center" data-i18n="calcColGrade">Grade</th>
+                                <th class="py-3 px-4 text-right no-print" data-i18n="calcColAction">Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody id="calc-subjects-tbody" class="divide-y divide-slate-100 text-sm bg-white"></tbody>
+                    </table>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-2">
+                    <div class="p-5 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-3">
+                        <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-bullseye text-amber-600"></i>
+                            <span data-i18n="calcTargetHeading">What-If / Target Average Helper</span>
+                        </h3>
+                        <p class="text-xs text-slate-600" data-i18n="calcTargetDesc">
+                            Set a target percentage across all subjects to see how many total points you need.
+                        </p>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <label class="text-xs font-bold text-slate-700" data-i18n="calcTargetLabel">Target Average (%):</label>
+                            <input type="number" id="calc-target-pct" min="0" max="100" value="85" oninput="updateCalculatorTotals()" class="w-24 px-3 py-1.5 rounded-xl border border-amber-300 text-sm font-bold bg-white">
+                            <span id="calc-target-result" class="text-xs font-bold text-amber-950 bg-amber-100 px-3 py-1.5 rounded-xl"></span>
+                        </div>
+                    </div>
+
+                    <div id="calc-apply-record-box" class="p-5 rounded-2xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between gap-3">
+                        <div>
+                            <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-floppy-disk text-school-green"></i>
+                                <span data-i18n="calcApplyHeading">Apply to My Private Student Record</span>
+                            </h3>
+                            <p id="calc-apply-desc" class="text-xs text-slate-600 mt-1" data-i18n="calcApplyDesc">
+                                Sign in as a Student to load your saved 9-subject marks or save updated 100-point marks to your profile.
+                            </p>
+                        </div>
+                        <div id="calc-apply-actions" class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="openAuthModal('student')" class="px-4 py-2 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs font-bold transition">
+                                <i class="fa-solid fa-right-to-bracket mr-1"></i>
+                                <span data-i18n="studentStaffLogin">Student / Staff Login</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: STUDENT MESSAGES -->
+        <section id="section-messages" class="tab-section hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2" data-i18n="msgHubHeading">
+                            <i class="fa-solid fa-comments text-school-green"></i>
+                            <span>Agew Midir Student Messaging Hub</span>
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-0.5" data-i18n="msgHubDesc">Connect with classmates and fellow students across Grades 9–12 for study groups and school coordination.</p>
+                    </div>
+                    <div id="messaging-auth-prompt"></div>
+                </div>
+
+                <div id="messaging-workspace" class="mt-5 grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    <div class="lg:col-span-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-500" data-i18n="fellowStudentsHeading">Fellow Students Directory</h3>
+                            <span id="msg-contacts-count" class="text-xs font-bold text-school-green">0</span>
+                        </div>
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                            <input type="text" id="msg-contact-search" oninput="renderMessagingContacts()" placeholder="Search student name, ID, or grade..." class="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-school-green">
+                        </div>
+                        <div id="msg-contacts-list" class="space-y-2 max-h-[430px] overflow-y-auto pr-1"></div>
+                    </div>
+
+                    <div class="lg:col-span-8 flex flex-col rounded-2xl border border-slate-200 bg-slate-50/60 overflow-hidden min-h-[460px]">
+                        <div id="msg-thread-header" class="bg-white px-5 py-3.5 border-b border-slate-200 flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-emerald-100 text-school-green flex items-center justify-center font-extrabold">
+                                    <i class="fa-solid fa-user-group text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 id="msg-active-partner-name" class="font-extrabold text-slate-900 text-sm">Select a Student to Chat</h4>
+                                    <p id="msg-active-partner-meta" class="text-xs text-slate-500">Choose any classmate from the left directory</p>
+                                </div>
+                            </div>
+                            <button id="msg-clear-thread-btn" onclick="clearCurrentThread()" class="hidden px-3 py-1.5 rounded-lg text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 transition">
+                                <i class="fa-solid fa-trash-can mr-1"></i>Clear Chat
+                            </button>
+                        </div>
+
+                        <div id="msg-thread-feed" class="flex-1 p-5 space-y-3 overflow-y-auto max-h-[340px]"></div>
+
+                        <form id="send-message-form" onsubmit="handleSendStudentMessage(event)" class="bg-white p-3.5 border-t border-slate-200 flex items-center gap-2.5">
+                            <input type="text" id="msg-body-input" required placeholder="Write a message to your classmate..." class="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-school-green focus:border-school-green">
+                            <button type="submit" id="msg-send-btn" class="px-5 py-2.5 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-sm font-bold transition flex items-center gap-2 shrink-0 shadow-sm">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span class="hidden sm:inline" data-i18n="sendBtn">Send</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: ONLINE EXAMS -->
+        <section id="section-exams" class="tab-section hidden space-y-6">
+            <div id="teacher-exam-builder" class="hidden bg-white rounded-2xl shadow-sm border border-amber-200 overflow-hidden">
+                <div class="bg-amber-50 px-6 py-4 border-b border-amber-200 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center">
+                            <i class="fa-solid fa-file-circle-plus"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base sm:text-lg font-bold text-slate-900">Create New Online Exam / Assessment</h2>
+                            <p class="text-xs text-slate-600">Build timed multiple-choice exams with automatic grading.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="create-exam-form" onsubmit="handleCreateExam(event)" class="p-6 space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Exam Title *</label>
+                            <input type="text" id="exam-title" required placeholder="e.g., Grade 12 Physics Mid-Exam" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-school-green">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Subject *</label>
+                            <select id="exam-subject" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Biology">Biology</option>
+                                <option value="English">English</option>
+                                <option value="Amharic">Amharic</option>
+                                <option value="History">History</option>
+                                <option value="Geography">Geography</option>
+                                <option value="ICT">ICT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Grade Level *</label>
+                            <select id="exam-grade" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+                                <option value="Grade 9">Grade 9</option>
+                                <option value="Grade 10">Grade 10</option>
+                                <option value="Grade 11">Grade 11</option>
+                                <option value="Grade 12">Grade 12</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Duration (Mins) *</label>
+                            <input type="number" id="exam-duration" required min="1" max="180" value="15" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Scheduled Date *</label>
+                            <input type="date" id="exam-date" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Instructions / Description</label>
+                            <input type="text" id="exam-desc" placeholder="Answer all questions before time expires." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-4 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-sm font-extrabold text-slate-800">Multiple-Choice Questions</h3>
+                            <button type="button" onclick="addQuestionField()" class="px-3.5 py-2 rounded-xl bg-emerald-50 text-school-green border border-emerald-200 hover:bg-emerald-100 text-xs font-bold flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-plus"></i>
+                                <span>Add Question</span>
+                            </button>
+                        </div>
+                        <div id="builder-questions-container" class="space-y-4"></div>
+                    </div>
+
+                    <div class="flex justify-end pt-3 border-t border-slate-100">
+                        <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-school-green hover:bg-school-greenDark shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Publish Online Exam</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div id="active-exam-runner" class="hidden bg-white rounded-2xl shadow-xl border-2 border-school-green overflow-hidden"></div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900" data-i18n="examsHeading">Online Examination & Practice Center</h2>
+                    <p class="text-sm text-slate-500" data-i18n="examsDesc">Select an exam below, enter your Student ID, and complete the timed assessment.</p>
+                </div>
+                <select id="exam-grade-filter" onchange="renderExamsList()" class="px-4 py-2.5 rounded-xl border border-slate-300 text-sm bg-white font-medium">
+                    <option value="ALL">All Grade Levels</option>
+                    <option value="Grade 9">Grade 9</option>
+                    <option value="Grade 10">Grade 10</option>
+                    <option value="Grade 11">Grade 11</option>
+                    <option value="Grade 12">Grade 12</option>
+                </select>
+            </div>
+
+            <div id="exams-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 id="exam-ledger-heading" class="font-extrabold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-check text-school-green"></i>
+                            <span>My Private Exam Attempts</span>
+                        </h3>
+                        <p id="exam-ledger-sub" class="text-xs text-slate-500">Sign in with your Student ID & PIN to view your own exam attempt history.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="ledger-exam-filter" onchange="renderExamHistory()" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs bg-white font-semibold">
+                            <option value="ALL">All Exams</option>
+                        </select>
+                        <button id="export-ledger-btn" onclick="exportExamLedgerCSV()" class="hidden px-3 py-1.5 rounded-xl bg-emerald-50 text-school-green border border-emerald-200 hover:bg-emerald-100 text-xs font-bold items-center gap-1.5 transition">
+                            <i class="fa-solid fa-file-csv"></i>
+                            <span>Export CSV</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500">
+                                <th class="py-3 px-4">Student ID & Name</th>
+                                <th class="py-3 px-4">Exam Title</th>
+                                <th class="py-3 px-4">Subject</th>
+                                <th class="py-3 px-4 text-right">Score</th>
+                                <th class="py-3 px-4 text-right">Percentage</th>
+                                <th class="py-3 px-4 text-right">Submitted</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exam-history-tbody" class="divide-y divide-slate-100 text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: YOUTUBE VIDEO HUB -->
+        <section id="section-videos" class="tab-section hidden space-y-6">
+            <div id="teacher-video-panel" class="hidden bg-white rounded-2xl shadow-sm border border-amber-200 overflow-hidden">
+                <div class="bg-amber-50 px-6 py-4 border-b border-amber-200 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center">
+                        <i class="fa-brands fa-youtube"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-slate-900">Publish Academic YouTube Lesson</h2>
+                        <p class="text-xs text-slate-600">Supports watch links, <code class="font-mono">youtu.be/</code>, Shorts, and embed URLs.</p>
+                    </div>
+                </div>
+
+                <form id="add-video-form" onsubmit="handleAddVideo(event)" class="p-6 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div class="lg:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Lesson Title *</label>
+                            <input type="text" id="video-title" required placeholder="e.g., Grade 12 Calculus: Derivatives" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Subject *</label>
+                            <select id="video-subject" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Physics">Physics</option>
+                                <option value="Chemistry">Chemistry</option>
+                                <option value="Biology">Biology</option>
+                                <option value="English">English</option>
+                                <option value="Amharic">Amharic</option>
+                                <option value="History">History</option>
+                                <option value="Geography">Geography</option>
+                                <option value="ICT">ICT</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Target Grade *</label>
+                            <select id="video-grade" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+                                <option value="Grade 9">Grade 9</option>
+                                <option value="Grade 10">Grade 10</option>
+                                <option value="Grade 11">Grade 11</option>
+                                <option value="Grade 12">Grade 12</option>
+                                <option value="All Grades">All Grades (9–12)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Category *</label>
+                            <select id="video-type" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+                                <option value="Lecture">Lecture</option>
+                                <option value="Exam Prep / Matric">Exam Prep / Matric</option>
+                                <option value="Lab Demo">Lab Demo</option>
+                                <option value="General Notice">General Notice</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">YouTube Video URL *</label>
+                            <input type="url" id="video-url" required placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Instructor / Lesson Summary</label>
+                            <input type="text" id="video-notes" placeholder="e.g., Dept. of Mathematics • EUEE Entrance Review" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Add Video to Hub</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-900" data-i18n="videosHeading">Academic YouTube Video Hub</h2>
+                    <p class="text-sm text-slate-500" data-i18n="videosDesc">Curated Ethiopian curriculum tutorials, Matric / EUEE exam prep, and science lab demonstrations.</p>
+                </div>
+                <div class="flex flex-wrap gap-2.5">
+                    <select id="video-subject-filter" onchange="renderVideosGrid()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white font-medium">
+                        <option value="ALL">All Subjects</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Chemistry">Chemistry</option>
+                        <option value="Biology">Biology</option>
+                        <option value="English">English</option>
+                        <option value="Amharic">Amharic</option>
+                        <option value="History">History</option>
+                        <option value="Geography">Geography</option>
+                        <option value="ICT">ICT</option>
+                    </select>
+                    <select id="video-grade-filter" onchange="renderVideosGrid()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white font-medium">
+                        <option value="ALL">All Grades</option>
+                        <option value="Grade 9">Grade 9</option>
+                        <option value="Grade 10">Grade 10</option>
+                        <option value="Grade 11">Grade 11</option>
+                        <option value="Grade 12">Grade 12</option>
+                    </select>
+                    <select id="video-type-filter" onchange="renderVideosGrid()" class="px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white font-medium">
+                        <option value="ALL">All Types</option>
+                        <option value="Lecture">Lecture</option>
+                        <option value="Exam Prep / Matric">Exam Prep / Matric</option>
+                        <option value="Lab Demo">Lab Demo</option>
+                        <option value="General Notice">General Notice</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="videos-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </section>
+
+        <!-- TAB 6: NOTICES & RESOURCES -->
+        <section id="section-resources" class="tab-section hidden space-y-6">
+            <div id="teacher-announcement-panel" class="hidden bg-white rounded-2xl shadow-sm border border-amber-200 overflow-hidden">
+                <div class="bg-amber-50 px-6 py-4 border-b border-amber-200 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-school-green text-white flex items-center justify-center">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base sm:text-lg font-bold text-slate-900">Post School Notice or External Study Resource</h2>
+                        <p class="text-xs text-slate-600">Share announcements, exam schedules, or links to study materials.</p>
+                    </div>
+                </div>
+
+                <form id="add-announcement-form" onsubmit="handleAddAnnouncement(event)" class="p-6 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Notice / Resource Title *</label>
+                            <input type="text" id="ann-title" required placeholder="e.g., Grade 12 Model National Exam Schedule" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Category *</label>
+                            <select id="ann-category" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white">
+                                <option value="Academic Notice">Academic Notice</option>
+                                <option value="Exam Schedule">Exam Schedule</option>
+                                <option value="Study Guide">Study Guide / Handout</option>
+                                <option value="School Event">School Event</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Details / Description *</label>
+                        <textarea id="ann-content" rows="3" required placeholder="Write the announcement details or study notes summary here..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Optional External Resource Link</label>
+                        <input type="url" id="ann-link" placeholder="https://..." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-school-green hover:bg-school-greenDark shadow-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Publish Notice</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-4">
+                    <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2" data-i18n="noticesHeading">
+                        <i class="fa-solid fa-clipboard-list text-school-green"></i>
+                        <span>Official School Notice Board</span>
+                    </h2>
+                    <div id="announcements-list" class="space-y-4"></div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+                        <h3 class="font-extrabold text-slate-900 flex items-center gap-2 mb-4" data-i18n="handoutsHeading">
+                            <i class="fa-solid fa-book-open text-amber-600"></i>
+                            <span>Quick Study Handouts</span>
+                        </h3>
+                        <div class="space-y-3" id="study-resources-list"></div>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-school-green to-slate-900 text-white rounded-2xl p-5 shadow-md">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                                <i class="fa-solid fa-landmark text-amber-400"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-base">Agew Midir High School</h4>
+                                <p class="text-xs text-emerald-200">Injibara, Awi Zone, Amhara Region</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-emerald-100 leading-relaxed mb-4">
+                            Committed to academic excellence, digital education, and national exam preparation for Grades 9–12 students in Injibara.
+                        </p>
+                        <div class="space-y-2 text-xs text-emerald-200 border-t border-white/10 pt-3">
+                            <div class="flex justify-between">
+                                <span>Registrar Office:</span>
+                                <span class="text-white font-semibold">Mon – Fri, 8:00 AM – 5:00 PM</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Digital Library & ICT:</span>
+                                <span class="text-white font-semibold">7:30 AM – 6:30 PM</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 7: ADMIN & DATA SYNC -->
+        <section id="section-admin" class="tab-section hidden space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-xl font-extrabold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-database text-school-green"></i>
+                            <span>School Data Management, CSV & Cloud Sync</span>
+                        </h2>
+                        <p class="text-sm text-slate-500 mt-0.5">Backup your school database, bulk import/export CSV gradebooks, or connect a live Firebase Realtime DB.</p>
+                    </div>
+                    <button onclick="promptResetData()" class="px-4 py-2 rounded-xl text-xs font-bold text-red-700 bg-red-50 border border-red-200 hover:bg-red-100 transition">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Reset Demo Data
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-school-green flex items-center justify-center">
+                                <i class="fa-solid fa-file-csv text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-900">Bulk CSV Student Marks</h3>
+                                <p class="text-xs text-slate-500">Import or export student rosters and 9-subject marks in CSV format.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2.5">
+                            <button onclick="exportStudentsCSV()" class="px-4 py-2.5 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs font-bold transition flex items-center gap-2">
+                                <i class="fa-solid fa-download"></i>
+                                <span>Export Full Gradebook (.CSV)</span>
+                            </button>
+                            <button onclick="downloadSampleCSVTemplate()" class="px-4 py-2.5 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-bold transition flex items-center gap-2">
+                                <i class="fa-solid fa-file-lines"></i>
+                                <span>Download Sample CSV Template</span>
+                            </button>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-200">
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Upload Student Marks CSV File:</label>
+                            <input type="file" id="csv-upload-input" accept=".csv" onchange="handleCSVUpload(event)" class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-100 file:text-amber-900 hover:file:bg-amber-200 cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                                <i class="fa-solid fa-box-archive text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-900">Complete School Database (.JSON)</h3>
+                                <p class="text-xs text-slate-500">Backup or restore all students, exams, results, videos, and notices.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2.5">
+                            <button onclick="exportFullDatabaseJSON()" class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-down"></i>
+                                <span>Export Full Backup (.JSON)</span>
+                            </button>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-200">
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">Restore / Import School Backup (.JSON):</label>
+                            <input type="file" id="json-upload-input" accept=".json" onchange="handleJSONImport(event)" class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-school-green hover:file:bg-emerald-200 cursor-pointer">
+                        </div>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-blue-50/60 border border-blue-200 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                                <i class="fa-solid fa-cloud text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-900">Realtime Cloud Sync (Firebase)</h3>
+                                <p class="text-xs text-slate-600">Connect a Firebase Realtime Database URL for live multi-device sync.</p>
+                            </div>
+                        </div>
+
+                        <form onsubmit="saveFirebaseConfig(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Firebase Realtime Database URL</label>
+                                <input type="url" id="firebase-url-input" placeholder="https://your-school-default-rtdb.firebaseio.com" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono bg-white">
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold transition">
+                                    Save & Sync Now
+                                </button>
+                                <button type="button" onclick="disconnectFirebase()" class="px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-100 transition">
+                                    Disconnect
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-200 text-slate-800 flex items-center justify-center">
+                                <i class="fa-solid fa-lock text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-extrabold text-slate-900">Admin Passcode Security</h3>
+                                <p class="text-xs text-slate-500">Change the master Teacher/Admin passcode used to unlock administrative tools.</p>
+                            </div>
+                        </div>
+
+                        <form onsubmit="handleChangeAdminPasscode(event)" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">New Admin Passcode (Min 4 characters)</label>
+                                <input type="text" id="new-admin-passcode" required minlength="4" placeholder="Enter new passcode" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-mono bg-white">
+                            </div>
+                            <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition">
+                                Update Admin Passcode
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="no-print bg-white border-t border-slate-200 mt-12 py-6 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-graduation-cap text-school-green text-base"></i>
+                <span>© 2026 <strong>Agew Midir High School (Injibara)</strong> • Awi Zone Education Office</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span>Production Academic Portal</span>
+                <span>•</span>
+                <button onclick="openGuideModal()" class="text-school-green font-semibold hover:underline">Deployment & Sync Guide</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Online Connection Required Overlay -->
+    <div id="online-gate-overlay" class="no-print fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 text-center space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-wifi"></i>
+            </div>
+            <h3 class="text-lg font-extrabold text-slate-900">Online Realtime Connection Required</h3>
+            <p id="online-gate-reason" class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Agew Midir High School Portal operates strictly online in realtime. Please check your internet connection and realtime database link to continue.
+            </p>
+            <div class="flex flex-wrap justify-center gap-2.5 pt-2">
+                <button type="button" onclick="retryRealtimeConnection()" class="px-5 py-2.5 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs sm:text-sm font-bold transition flex items-center gap-2">
+                    <i class="fa-solid fa-rotate"></i>
+                    <span>Retry Realtime Connection</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUBJECTS = [
+            "Mathematics", "Physics", "Chemistry", "Biology",
+            "English", "Amharic", "History", "Geography", "ICT"
+        ];
+
+        const DEFAULT_ADMIN_PASSCODE = "AMHS2026";
+        const DEFAULT_FIREBASE_URL = "https://agew-midir-portaal-default-rtdb.firebaseio.com/";
+        const DEFAULT_STUDENTS = [
+            {
+                id: "AMHS-101", pin: "1234", name: "Selamawit Tadesse", grade: "Grade 12", section: "A", conduct: "A",
+                marks: { Mathematics: 96, Physics: 94, Chemistry: 92, Biology: 95, English: 91, Amharic: 93, History: 89, Geography: 90, ICT: 97 }
+            },
+            {
+                id: "AMHS-102", pin: "1234", name: "Dawit Alemu", grade: "Grade 12", section: "A", conduct: "A",
+                marks: { Mathematics: 88, Physics: 90, Chemistry: 85, Biology: 84, English: 86, Amharic: 89, History: 82, Geography: 85, ICT: 92 }
+            },
+            {
+                id: "AMHS-103", pin: "1234", name: "Birtukan Mekonnen", grade: "Grade 11", section: "B", conduct: "A",
+                marks: { Mathematics: 91, Physics: 87, Chemistry: 89, Biology: 93, English: 90, Amharic: 94, History: 88, Geography: 86, ICT: 90 }
+            },
+            {
+                id: "AMHS-104", pin: "1234", name: "Yohannes Getachew", grade: "Grade 11", section: "A", conduct: "A",
+                marks: { Mathematics: 78, Physics: 75, Chemistry: 74, Biology: 80, English: 82, Amharic: 85, History: 84, Geography: 81, ICT: 88 }
+            },
+            {
+                id: "AMHS-105", pin: "1234", name: "Hanna Tesfaye", grade: "Grade 10", section: "C", conduct: "A",
+                marks: { Mathematics: 85, Physics: 82, Chemistry: 84, Biology: 88, English: 89, Amharic: 91, History: 87, Geography: 86, ICT: 90 }
+            },
+            {
+                id: "AMHS-106", pin: "1234", name: "Bereket Worku", grade: "Grade 10", section: "B", conduct: "B",
+                marks: { Mathematics: 64, Physics: 60, Chemistry: 58, Biology: 66, English: 70, Amharic: 74, History: 72, Geography: 69, ICT: 76 }
+            },
+            {
+                id: "AMHS-107", pin: "1234", name: "Tigist Assefa", grade: "Grade 9", section: "A", conduct: "A",
+                marks: { Mathematics: 93, Physics: 89, Chemistry: 91, Biology: 94, English: 92, Amharic: 95, History: 90, Geography: 91, ICT: 94 }
+            },
+            {
+                id: "AMHS-108", pin: "1234", name: "Mulugeta Demissie", grade: "Grade 9", section: "D", conduct: "B",
+                marks: { Mathematics: 45, Physics: 42, Chemistry: 48, Biology: 51, English: 55, Amharic: 60, History: 58, Geography: 52, ICT: 62 }
+            }
+        ];
+
+        const DEFAULT_MESSAGES = [
+            {
+                id: "MSG-1", senderId: "AMHS-102", senderName: "Dawit Alemu",
+                recipientId: "AMHS-101", recipientName: "Selamawit Tadesse",
+                text: "Selam Selamawit! Are you joining the Grade 12 Calculus study group at the library after 4:00 PM?",
+                timestamp: "Nov 21, 2:15 PM", read: false
+            },
+            {
+                id: "MSG-2", senderId: "AMHS-101", senderName: "Selamawit Tadesse",
+                recipientId: "AMHS-102", recipientName: "Dawit Alemu",
+                text: "Hi Dawit! Yes, I will bring the derivative and limit practice sheets.",
+                timestamp: "Nov 21, 2:20 PM", read: true
+            }
+        ];
+
+        const DEFAULT_EXAMS = [
+            {
+                id: "EXAM-1", title: "Grade 12 Mathematics: Calculus & Limits Practice",
+                subject: "Mathematics", grade: "Grade 12", duration: 10, date: "2026-11-25",
+                description: "Entrance preparation quiz covering derivatives, limits, and continuity.",
+                questions: [
+                    { q: "What is the derivative of f(x) = 3x² + 5x - 7 with respect to x?", options: ["6x + 5", "3x + 5", "6x² + 5", "6x - 7"], answer: 0 },
+                    { q: "Evaluate the limit: lim (x → 2) (x² - 4) / (x - 2)", options: ["0", "2", "4", "Undefined"], answer: 2 },
+                    { q: "What is the indefinite integral ∫ 2x dx?", options: ["x² + C", "2x² + C", "x + C", "2 + C"], answer: 0 }
+                ]
+            },
+            {
+                id: "EXAM-2", title: "Grade 11 Physics: Vectors & Kinematics Assessment",
+                subject: "Physics", grade: "Grade 11", duration: 12, date: "2026-11-27",
+                description: "Assessment on uniform acceleration, projectile motion, and vector resolution.",
+                questions: [
+                    { q: "Which of the following physical quantities is a vector?", options: ["Speed", "Mass", "Displacement", "Temperature"], answer: 2 },
+                    { q: "An object starts from rest and accelerates uniformly at 4 m/s² for 5 seconds. Final velocity?", options: ["9 m/s", "20 m/s", "1.25 m/s", "40 m/s"], answer: 1 }
+                ]
+            }
+        ];
+
+        const DEFAULT_VIDEOS = [
+            {
+                id: "VID-0",
+                title: "Agew Midir Featured Academic Video Lesson",
+                subject: "Mathematics",
+                grade: "All Grades",
+                type: "Lecture",
+                youtubeId: "BIUk8AnjY6mkRJi8q-sRCdSqMqN62RQI1OxFSHVMlkpyoyfZXm_yUlHIBuQbTmphU6lDj96uvnTyuD-i_Km8UC8",
+                notes: "Featured YouTube academic resource • Agew Midir High School (Injibara)"
+            },
+            {
+                id: "VID-1",
+                title: "Introduction to Limits and Derivatives (Calculus I)",
+                subject: "Mathematics",
+                grade: "Grade 12",
+                type: "Exam Prep / Matric",
+                youtubeId: "WUvTyaaNkzM",
+                notes: "Visual Calculus Foundation • Recommended for Grade 12 Entrance Exam"
+            },
+            {
+                id: "VID-2",
+                title: "Newton's Laws of Motion & Free Body Diagrams",
+                subject: "Physics",
+                grade: "Grade 11",
+                type: "Lecture",
+                youtubeId: "kKKM8Y-u7ds",
+                notes: "Mechanics Unit 2 • Complete concept breakdown"
+            }
+        ];
+
+        const DEFAULT_ANNOUNCEMENTS = [
+            {
+                id: "ANN-1", title: "Semester I Mid-Exam Timetable Released (Grades 9–12)",
+                category: "Exam Schedule", date: "Nov 20, 2026", link: "",
+                content: "All students are informed that Semester I Mid-Examinations commence Monday at 8:30 AM. Bring your Agew Midir High School ID card."
+            },
+            {
+                id: "ANN-2", title: "Grade 12 Saturday Tutorial & Entrance Prep Sessions",
+                category: "Academic Notice", date: "Nov 18, 2026", link: "",
+                content: "Weekend tutorial classes for Mathematics, Physics, English, and Biology run every Saturday from 8:00 AM to 12:30 PM."
+            }
+        ];
+
+        const STUDY_NOTES = [
+            { title: "Grade 12 Mathematics Formula Handbook", subject: "Mathematics", size: "Summary Sheet • TXT" },
+            { title: "Grade 11 Physics Mechanics & Vectors Notes", subject: "Physics", size: "Study Guide • TXT" },
+            { title: "Grade 10 Chemistry Periodic Trends", subject: "Chemistry", size: "Revision Notes • TXT" }
+        ];
+
+        let state = {
+            lang: 'en',
+            session: { role: 'guest', studentId: null, displayName: 'Guest' },
+            activeTab: 'marks',
+            activeMessagePartnerId: null,
+            adminPasscode: DEFAULT_ADMIN_PASSCODE,
+            firebaseUrl: '',
+            students: [],
+            exams: [],
+            examAttempts: [],
+            videos: [],
+            announcements: [],
+            messages: []
+        };
+
+        const I18N = {
+            en: {
+                navMarks: "Private Marks", navCalculator: "Mark Calculator", navMessages: "Student Messages",
+                navExams: "Online Exams", navVideos: "YouTube Video Hub", navResources: "Notices & Resources",
+                navAdmin: "Admin & Data Sync", studentStaffLogin: "Student / Staff Login",
+                privateAccessBadge: "STRICT PRIVATE ACCESS", privateMarksHeading: "Private Student Marks & Transcript",
+                guestLookupDesc: "Marks are strictly private. Sign in with your Student ID and 4-digit PIN to view your personal transcript.",
+                studentIdPlaceholder: "Your Student ID (e.g., AMHS-101)", pinPlaceholder: "Your PIN (e.g., 1234)",
+                unlockMyMarks: "Unlock My Marks", viewMyReport: "View My Private Report Card",
+                calcBadge: "INTERACTIVE GRADE & GPA/AVG TOOL", calcHeading: "Student Mark Calculator",
+                calcSubtitle: "Calculate real-time totals, percentage averages, letter grades, and target scores across subjects.",
+                calcLoadSaved: "Load My Saved Marks", calcSampleBtn: "Sample Scores", calcResetBtn: "Reset / Clear",
+                calcPrintBtn: "Print Summary", calcTotalLabel: "Total Score", calcAvgLabel: "Percentage / Average",
+                calcStatusLabel: "Standing / Status", calcStatusEnter: "Enter Marks", calcStatusPass: "PASSING / HONOR",
+                calcStatusBelow: "NEEDS IMPROVEMENT", calcSubjectsLabel: "Active Subjects", calcAddSubName: "Custom Subject Name",
+                calcAddSubScore: "Score", calcAddSubMax: "Max Points", calcAddSubBtn: "Add Subject",
+                calcColSubject: "Subject", calcColScore: "Score Earned", calcColMax: "Max Mark", calcColPct: "Subject %",
+                calcColGrade: "Grade", calcColAction: "Remove", calcTargetHeading: "What-If / Target Average Helper",
+                calcTargetDesc: "Set a target percentage across all subjects to see how many total points you need.",
+                calcTargetLabel: "Target Average (%):", calcApplyHeading: "Apply to My Private Student Record",
+                calcApplyDesc: "Sign in as a Student to load your saved 9-subject marks or save updated 100-point marks to your profile.",
+                calcSaveMyRecord: "Save to My Private Record", fellowStudentsHeading: "Fellow Students Directory",
+                searchStudentPlaceholder: "Search student name, ID, or grade...", selectStudentTitle: "Select a Student to Chat",
+                selectStudentMeta: "Choose any classmate from the left directory", msgInputPlaceholder: "Write a message to your classmate...",
+                sendBtn: "Send", examsHeading: "Online Examination & Practice Center",
+                examsDesc: "Select an exam below, enter your Student ID, and complete the timed assessment.",
+                videosHeading: "Academic YouTube Video Hub",
+                videosDesc: "Curated Ethiopian curriculum tutorials, Matric / EUEE exam prep, and science lab demonstrations.",
+                noticesHeading: "Official School Notice Board", handoutsHeading: "Quick Study Handouts",
+                langChanged: "Switched portal language to English"
+            },
+            am: {
+                navMarks: "የግል ውጤቶች", navCalculator: "የውጤት ማስያ", navMessages: "የተማሪዎች መልዕክት",
+                navExams: "የመስመር ላይ ፈተና", navVideos: "የዩቲዩብ ትምህርት ቪዲዮ", navResources: "ማስታወቂያ እና ማጣቀሻ",
+                navAdmin: "አስተዳደር እና ዳታ ሲንክ", studentStaffLogin: "የተማሪ / የሰራተኛ መግቢያ",
+                privateAccessBadge: "በጥብቅ የተጠበቀ የግል መዳረሻ", privateMarksHeading: "የግል የተማሪ ውጤት እና ትራንስክሪፕት",
+                guestLookupDesc: "የተማሪ ውጤቶች በጥብቅ የግል ናቸው። የራስዎን ውጤት ለማየት የተማሪ መታወቂያ እና የ4 አሃዝ ፒን ያስገቡ።",
+                studentIdPlaceholder: "የተማሪ መታወቂያ (AMHS-101)", pinPlaceholder: "የፒን ኮድ (1234)",
+                unlockMyMarks: "ውጤቴን ክፈት", viewMyReport: "የግል ውጤት ወረቀቴን ይመልከቱ",
+                calcBadge: "የውጤት እና የአማካይ ማስያ መሳሪያ", calcHeading: "የተማሪ ውጤት ማስያ",
+                calcSubtitle: "ጠቅላላ ውጤትን፣ አማካኝ በመቶኛ፣ ፊደል ደረጃ እና የሚፈለግ ውጤት በቅጽበት ያስሉ።",
+                calcLoadSaved: "የተቀመጠ ውጤቴን አምጣ", calcSampleBtn: "የናሙና ውጤቶች", calcResetBtn: "ዳግም አስጀምር / አጽዳ",
+                calcPrintBtn: "ማጠቃለያ አትም", calcTotalLabel: "ጠቅላላ ውጤት", calcAvgLabel: "አማካኝ / በመቶኛ",
+                calcStatusLabel: "ሁኔታ / ደረጃ", calcStatusEnter: "ውጤት ያስገቡ", calcStatusPass: "ያለፈ / ጥሩ ውጤት",
+                calcStatusBelow: "ተጨማሪ ጥረት ያስፈልጋል", calcSubjectsLabel: "የትምህርት አይነቶች ብዛት", calcAddSubName: "ተጨማሪ የትምህርት አይነት ስም",
+                calcAddSubScore: "የተገኘ ነጥብ", calcAddSubMax: "ከፍተኛ ነጥብ", calcAddSubBtn: "ትምህርት ጨምር",
+                calcColSubject: "የትምህርት አይነት", calcColScore: "የተገኘ ውጤት", calcColMax: "ከፍተኛ ነጥብ", calcColPct: "የትምህርት %",
+                calcColGrade: "ደረጃ", calcColAction: "አስወግድ", calcTargetHeading: "የታለመ አማካኝ ማስያ (What-If)",
+                calcTargetDesc: "የሚፈልጉትን አማካኝ በመቶኛ ያስገቡ፤ ምን ያህል ነጥብ እንደሚያስፈልግ ይመልከቱ።",
+                calcTargetLabel: "የታለመ አማካኝ (%):", calcApplyHeading: "ወደ የግል የተማሪ መዝገብ ያስቀምጡ",
+                calcApplyDesc: "የተቀመጠ ውጤትዎን ለማምጣት ወይም ለማስቀመጥ በተማሪ መለያ ይግቡ።",
+                calcSaveMyRecord: "ወደ የግል መዝገቤ አስቀምጥ", fellowStudentsHeading: "የተማሪዎች ዝርዝር",
+                searchStudentPlaceholder: "በስም፣ በመታወቂያ ወይም በክፍል ይፈልጉ...", selectStudentTitle: "ለማውራት ተማሪ ይምረጡ",
+                selectStudentMeta: "ከግራ ዝርዝር ውስጥ ማንኛውንም ተማሪ ይምረጡ", msgInputPlaceholder: "ለክፍል ጓደኛዎ መልዕክት ይጻፉ...",
+                sendBtn: "ላክ", examsHeading: "የመስመር ላይ ፈተና እና መለማመጃ ማዕከል",
+                examsDesc: "ከታች ያለውን ፈተና ይምረጡ፣ የተማሪ መታወቂያ ያስገቡ እና ይፈተኑ።",
+                videosHeading: "የትምህርት ዩቲዩብ ቪዲዮ ማዕከል",
+                videosDesc: "የኢትዮጵያ ስርዓተ ትምህርት ማብራሪያዎች፣ የማትሪክ ዝግጅት እና የላብራቶሪ ቪዲዮዎች።",
+                noticesHeading: "ይፋዊ የትምህርት ቤት ማስታወቂያ ሰሌዳ", handoutsHeading: "ፈጣን የጥናት ማስታወሻዎች",
+                langChanged: "የፖርታሉ ቋንቋ ወደ አማርኛ ተቀይሯል"
+            }
+        };
+
+        let activeExamTimer = null;
+        let realtimePollInterval = null;
+        let realtimeEventSource = null;
+        let lastRealtimeHash = '';
+        let questionBuilderCount = 0;
+
+        let calculatorRows = SUBJECTS.map(sub => ({
+            id: "calc-" + sub.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+            name: sub, score: 0, maxScore: 100, isCustom: false
+        }));
+
+        function t(key) {
+            return (I18N[state.lang] && I18N[state.lang][key]) || I18N.en[key] || key;
+        }
+
+        function setLanguage(lang) {
+            state.lang = (lang === 'am') ? 'am' : 'en';
+            localStorage.setItem('amhs_lang', state.lang);
+            applyLanguageUI();
+            showToast(t('langChanged'), 'info');
+        }
+
+        function applyLanguageUI() {
+            document.documentElement.lang = state.lang === 'am' ? 'am' : 'en';
+            const enBtn = document.getElementById('lang-btn-en');
+            const amBtn = document.getElementById('lang-btn-am');
+            if (enBtn && amBtn) {
+                const activeCls = "px-2.5 py-1.5 rounded-lg text-xs font-extrabold bg-white text-school-green shadow-xs transition";
+                const idleCls = "px-2.5 py-1.5 rounded-lg text-xs font-extrabold text-slate-600 hover:text-slate-900 transition";
+                amBtn.className = state.lang === 'am' ? activeCls : idleCls;
+                enBtn.className = state.lang === 'en' ? activeCls : idleCls;
+            }
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (I18N[state.lang] && I18N[state.lang][key]) {
+                    const span = el.querySelector('span');
+                    if (span) span.textContent = I18N[state.lang][key];
+                    else el.textContent = I18N[state.lang][key];
+                }
+            });
+            const setText = (id, val) => { const n = document.getElementById(id); if (n) n.textContent = val; };
+            const setPh = (id, val) => { const n = document.getElementById(id); if (n) n.placeholder = val; };
+            setText('msg-active-partner-name', t('selectStudentTitle'));
+            setText('msg-active-partner-meta', t('selectStudentMeta'));
+            setPh('msg-contact-search', t('searchStudentPlaceholder'));
+            setPh('msg-body-input', t('msgInputPlaceholder'));
+
+            updateSyncBadge(hasRealtimeEndpoint() ? 'connected' : 'online_only');
+            updateSessionUI();
+            renderAll();
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            loadLocalState();
+            const savedLang = localStorage.getItem('amhs_lang');
+            if (savedLang === 'am' || savedLang === 'en') state.lang = savedLang;
+
+            buildSubjectInputs();
+            addQuestionField();
+            renderCalculatorRows();
+            updateNavCounts();
+            updateSessionUI();
+
+            const dateInput = document.getElementById('exam-date');
+            if (dateInput) dateInput.valueAsDate = new Date();
+
+            document.getElementById('mobile-menu-btn').addEventListener('click', () => {
+                const nav = document.getElementById('main-nav');
+                nav.classList.toggle('hidden');
+                nav.classList.toggle('flex');
+            });
+
+            window.addEventListener('online', async () => {
+                enforceOnlineRealtimeGate();
+                if (hasRealtimeEndpoint()) {
+                    await syncFromFirebase(true);
+                    startRealtimeStream();
+                } else {
+                    updateSyncBadge('online_only');
+                }
+                showToast("Online connection active.", "info");
+            });
+
+            window.addEventListener('offline', () => {
+                stopRealtimeStream();
+                enforceOnlineRealtimeGate("Internet connection lost. Offline mode is disabled for this realtime portal.");
+            });
+
+            enforceOnlineRealtimeGate();
+
+            if (state.firebaseUrl) {
+                const fbInput = document.getElementById('firebase-url-input');
+                if (fbInput) fbInput.value = state.firebaseUrl;
+                if (isPortalOnline()) {
+                    await syncFromFirebase(true);
+                    startRealtimeStream();
+                }
+            }
+
+            applyLanguageUI();
+        });
+
+        function isPortalOnline() { return navigator.onLine === true; }
+        function hasRealtimeEndpoint() { return Boolean(state.firebaseUrl && state.firebaseUrl.trim().length > 0); }
+
+        function enforceOnlineRealtimeGate(customReason = '') {
+            const overlay = document.getElementById('online-gate-overlay');
+            const reasonEl = document.getElementById('online-gate-reason');
+            if (!overlay) return true;
+            if (!isPortalOnline()) {
+                if (reasonEl) reasonEl.textContent = customReason || "You appear to be offline. This portal works strictly online in realtime.";
+                updateSyncBadge('offline');
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+                return false;
+            }
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            return true;
+        }
+
+        async function retryRealtimeConnection() {
+            if (!enforceOnlineRealtimeGate()) return;
+            if (hasRealtimeEndpoint()) {
+                await syncFromFirebase(true);
+                startRealtimeStream();
+                showToast("Reconnected to realtime database!", "success");
+            } else {
+                updateSyncBadge('online_only');
+                showToast("Online connection active.", "info");
+            }
+        }
+
+        function loadLocalState() {
+            try {
+                state.adminPasscode = localStorage.getItem('amhs_admin_pass') || DEFAULT_ADMIN_PASSCODE;
+                const savedFbUrl = localStorage.getItem('amhs_firebase_url');
+                state.firebaseUrl = savedFbUrl !== null ? savedFbUrl : DEFAULT_FIREBASE_URL;
+                const savedSession = sessionStorage.getItem('amhs_session');
+                if (savedSession) state.session = JSON.parse(savedSession);
+
+                state.students = JSON.parse(localStorage.getItem('amhs_students')) || JSON.parse(JSON.stringify(DEFAULT_STUDENTS));
+                state.exams = JSON.parse(localStorage.getItem('amhs_exams')) || JSON.parse(JSON.stringify(DEFAULT_EXAMS));
+                state.examAttempts = JSON.parse(localStorage.getItem('amhs_attempts')) || [
+                    { studentId: "AMHS-101", studentName: "Selamawit Tadesse", examId: "EXAM-1", examTitle: "Grade 12 Mathematics: Calculus & Limits Practice", subject: "Mathematics", score: "3 / 3", percentage: 100, date: "Nov 20, 2026" }
+                ];
+                state.videos = JSON.parse(localStorage.getItem('amhs_videos')) || JSON.parse(JSON.stringify(DEFAULT_VIDEOS));
+                state.announcements = JSON.parse(localStorage.getItem('amhs_announcements')) || JSON.parse(JSON.stringify(DEFAULT_ANNOUNCEMENTS));
+                state.messages = JSON.parse(localStorage.getItem('amhs_messages')) || JSON.parse(JSON.stringify(DEFAULT_MESSAGES));
+            } catch (e) {
+                state.students = [...DEFAULT_STUDENTS];
+                state.exams = [...DEFAULT_EXAMS];
+                state.videos = [...DEFAULT_VIDEOS];
+                state.announcements = [...DEFAULT_ANNOUNCEMENTS];
+                state.messages = [...DEFAULT_MESSAGES];
+            }
+        }
+
+        async function saveAllData() {
+            if (!enforceOnlineRealtimeGate("Cannot save changes while offline.")) return false;
+            localStorage.setItem('amhs_students', JSON.stringify(state.students));
+            localStorage.setItem('amhs_exams', JSON.stringify(state.exams));
+            localStorage.setItem('amhs_attempts', JSON.stringify(state.examAttempts));
+            localStorage.setItem('amhs_videos', JSON.stringify(state.videos));
+            localStorage.setItem('amhs_announcements', JSON.stringify(state.announcements));
+            localStorage.setItem('amhs_messages', JSON.stringify(state.messages));
+            updateNavCounts();
+
+            if (hasRealtimeEndpoint()) {
+                const ok = await pushToFirebase();
+                if (!ok) {
+                    showToast("Realtime cloud write failed. Check Firebase URL or rules.", "error");
+                    return false;
+                }
+            } else {
+                updateSyncBadge('online_only');
+            }
+            return true;
+        }
+
+        function applyRemoteSnapshot(data) {
+            if (!data || typeof data !== 'object') return false;
+            const snapshotStr = JSON.stringify(data);
+            if (snapshotStr === lastRealtimeHash) return false;
+            lastRealtimeHash = snapshotStr;
+
+            if (Array.isArray(data.students)) state.students = data.students;
+            if (Array.isArray(data.exams)) state.exams = data.exams;
+            if (Array.isArray(data.examAttempts)) state.examAttempts = data.examAttempts;
+            if (Array.isArray(data.videos)) state.videos = data.videos;
+            if (Array.isArray(data.announcements)) state.announcements = data.announcements;
+            if (Array.isArray(data.messages)) state.messages = data.messages;
+
+            localStorage.setItem('amhs_students', JSON.stringify(state.students));
+            localStorage.setItem('amhs_exams', JSON.stringify(state.exams));
+            localStorage.setItem('amhs_attempts', JSON.stringify(state.examAttempts));
+            localStorage.setItem('amhs_videos', JSON.stringify(state.videos));
+            localStorage.setItem('amhs_announcements', JSON.stringify(state.announcements));
+            localStorage.setItem('amhs_messages', JSON.stringify(state.messages));
+            updateNavCounts();
+            return true;
+        }
+
+        async function pushToFirebase() {
+            if (!hasRealtimeEndpoint() || !isPortalOnline()) return false;
+            const cleanUrl = state.firebaseUrl.replace(/\/+$/, '');
+            updateSyncBadge('syncing');
+            try {
+                const payload = {
+                    students: state.students, exams: state.exams, examAttempts: state.examAttempts,
+                    videos: state.videos, announcements: state.announcements, messages: state.messages,
+                    updatedAt: new Date().toISOString()
+                };
+                lastRealtimeHash = JSON.stringify(payload);
+                const res = await fetch(`${cleanUrl}/amhs_portal.json`, {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json' }, cache: 'no-store',
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error("PUT failed");
+                updateSyncBadge('connected');
+                return true;
+            } catch (err) {
+                updateSyncBadge('offline');
+                return false;
+            }
+        }
+
+        async function syncFromFirebase(rerenderIfChanged = false) {
+            if (!hasRealtimeEndpoint() || !isPortalOnline()) return false;
+            const cleanUrl = state.firebaseUrl.replace(/\/+$/, '');
+            updateSyncBadge('syncing');
+            try {
+                const res = await fetch(`${cleanUrl}/amhs_portal.json?t=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) throw new Error("GET failed");
+                const data = await res.json();
+                const changed = applyRemoteSnapshot(data);
+                updateSyncBadge('connected');
+                if (changed && rerenderIfChanged) renderAll();
+                return true;
+            } catch (err) {
+                updateSyncBadge('offline');
+                return false;
+            }
+        }
+
+        function stopRealtimeStream() {
+            if (realtimeEventSource) { realtimeEventSource.close(); realtimeEventSource = null; }
+            if (realtimePollInterval) { clearInterval(realtimePollInterval); realtimePollInterval = null; }
+        }
+
+        function startRealtimeStream() {
+            stopRealtimeStream();
+            if (!hasRealtimeEndpoint() || !isPortalOnline()) return;
+            const cleanUrl = state.firebaseUrl.replace(/\/+$/, '');
+            try {
+                if (typeof EventSource !== 'undefined') {
+                    realtimeEventSource = new EventSource(`${cleanUrl}/amhs_portal.json`);
+                    realtimeEventSource.addEventListener('put', async () => { await syncFromFirebase(true); });
+                    realtimeEventSource.addEventListener('patch', async () => { await syncFromFirebase(true); });
+                }
+            } catch (e) {}
+            realtimePollInterval = setInterval(async () => {
+                if (isPortalOnline() && hasRealtimeEndpoint()) await syncFromFirebase(true);
+            }, 5000);
+        }
+
+        function updateSyncBadge(status) {
+            const el = document.getElementById('sync-status-badge');
+            if (!el) return;
+            if (!isPortalOnline()) {
+                el.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-600"></span><span class="text-red-700">Offline</span>`;
+            } else if (!hasRealtimeEndpoint()) {
+                el.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>Online • Realtime Ready</span>`;
+            } else if (status === 'syncing') {
+                el.innerHTML = `<i class="fa-solid fa-rotate fa-spin text-blue-600"></i><span>Syncing...</span>`;
+            } else if (status === 'connected') {
+                el.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span class="text-emerald-800">Realtime Live</span>`;
+            } else {
+                el.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-600"></span><span class="text-red-700">Sync Error</span>`;
+            }
+        }
+
+        async function saveFirebaseConfig(e) {
+            e.preventDefault();
+            if (!enforceOnlineRealtimeGate()) return;
+            const url = document.getElementById('firebase-url-input').value.trim();
+            if (!url) return;
+            state.firebaseUrl = url;
+            localStorage.setItem('amhs_firebase_url', url);
+            await pushToFirebase();
+            startRealtimeStream();
+            showToast("Connected & enabled live realtime sync!");
+        }
+
+        function disconnectFirebase() {
+            stopRealtimeStream();
+            state.firebaseUrl = '';
+            localStorage.setItem('amhs_firebase_url', '');
+            document.getElementById('firebase-url-input').value = '';
+            updateSyncBadge(isPortalOnline() ? 'online_only' : 'offline');
+            showToast("Disconnected realtime cloud endpoint.", "info");
+        }
+
+        function updateNavCounts() {
+            document.getElementById('nav-exam-count').textContent = state.exams.length;
+            document.getElementById('nav-video-count').textContent = state.videos.length;
+            const badge = document.getElementById('nav-unread-count');
+            if (state.session.role === 'student' && state.session.studentId) {
+                const unread = state.messages.filter(m => m.recipientId === state.session.studentId && !m.read).length;
+                if (unread > 0) { badge.textContent = unread; badge.classList.remove('hidden'); }
+                else badge.classList.add('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            const bgClass = type === 'error' ? 'bg-red-600' : type === 'info' ? 'bg-school-green' : 'bg-emerald-600';
+            const iconClass = type === 'error' ? 'fa-circle-exclamation' : type === 'info' ? 'fa-circle-info' : 'fa-circle-check';
+            toast.className = `${bgClass} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-medium pointer-events-auto transition-all duration-300`;
+            toast.innerHTML = `<i class="fa-solid ${iconClass} text-base shrink-0"></i><span class="flex-1">${escapeHTML(message)}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.remove(), 300); }, 3200);
+        }
+
+        function showConfirmModal(title, message, onConfirm) {
+            const modal = document.getElementById('confirm-modal');
+            document.getElementById('confirm-title').textContent = title;
+            document.getElementById('confirm-message').textContent = message;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            const okBtn = document.getElementById('confirm-ok-btn');
+            const cancelBtn = document.getElementById('confirm-cancel-btn');
+            const cleanup = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); okBtn.onclick = null; cancelBtn.onclick = null; };
+            cancelBtn.onclick = cleanup;
+            okBtn.onclick = () => { cleanup(); onConfirm(); };
+        }
+
+        function openGuideModal() {
+            const m = document.getElementById('guide-modal');
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+        }
+
+        function closeGuideModal() {
+            const m = document.getElementById('guide-modal');
+            if (m) { m.classList.add('hidden'); m.classList.remove('flex'); }
+        }
+
+        function promptResetData() {
+            showConfirmModal(
+                "Reset Portal Demo Data?",
+                "Restore sample student records, online exams, YouTube videos, notices, and messages to defaults?",
+                async () => {
+                    ['amhs_students', 'amhs_exams', 'amhs_attempts', 'amhs_videos', 'amhs_announcements', 'amhs_messages'].forEach(k => localStorage.removeItem(k));
+                    loadLocalState();
+                    await saveAllData();
+                    updateNavCounts();
+                    renderAll();
+                    showToast("Portal demo data restored!", "info");
+                }
+            );
+        }
+
+        function openAuthModal(defaultTab = 'student') {
+            switchAuthTab(defaultTab);
+            const modal = document.getElementById('auth-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function switchAuthTab(tab) {
+            const stuTab = document.getElementById('auth-tab-student');
+            const tchTab = document.getElementById('auth-tab-teacher');
+            const stuForm = document.getElementById('student-login-form');
+            const tchForm = document.getElementById('teacher-login-form');
+            if (tab === 'student') {
+                stuTab.className = "py-2 rounded-lg text-xs sm:text-sm font-bold bg-white text-school-green shadow-sm transition";
+                tchTab.className = "py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition";
+                stuForm.classList.remove('hidden');
+                tchForm.classList.add('hidden');
+            } else {
+                tchTab.className = "py-2 rounded-lg text-xs sm:text-sm font-bold bg-amber-600 text-white shadow-sm transition";
+                stuTab.className = "py-2 rounded-lg text-xs sm:text-sm font-bold text-slate-600 hover:text-slate-900 transition";
+                tchForm.classList.remove('hidden');
+                stuForm.classList.add('hidden');
+            }
+        }
+
+        function fillDemoStudentLogin() {
+            document.getElementById('login-stu-id').value = "AMHS-101";
+            document.getElementById('login-stu-pin').value = "1234";
+        }
+
+        function fillDemoAdminLogin() {
+            document.getElementById('login-admin-name').value = "Academic Registrar";
+            document.getElementById('login-admin-pass').value = state.adminPasscode;
+        }
+
+        function handleStudentLogin(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('login-stu-id').value.trim().toUpperCase();
+            const pinInput = document.getElementById('login-stu-pin').value.trim();
+            const student = state.students.find(s => s.id.toUpperCase() === idInput);
+            if (!student || (student.pin || "1234") !== pinInput) {
+                showToast("Invalid Student ID or PIN.", "error");
+                return;
+            }
+            state.session = { role: 'student', studentId: student.id, displayName: student.name };
+            sessionStorage.setItem('amhs_session', JSON.stringify(state.session));
+            closeAuthModal();
+            updateSessionUI();
+            renderAll();
+            switchTab('marks');
+            viewStudentTranscript(student.id);
+            showToast(`Welcome back, ${student.name}!`);
+        }
+
+        function handleTeacherLogin(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('login-admin-name').value.trim() || "Staff Admin";
+            const passInput = document.getElementById('login-admin-pass').value.trim();
+            if (passInput !== state.adminPasscode) {
+                showToast("Invalid Teacher/Admin Passcode.", "error");
+                return;
+            }
+            state.session = { role: 'teacher', studentId: null, displayName: nameInput };
+            sessionStorage.setItem('amhs_session', JSON.stringify(state.session));
+            closeAuthModal();
+            updateSessionUI();
+            renderAll();
+            showToast(`Signed in as ${nameInput}`);
+        }
+
+        function logoutSession() {
+            state.session = { role: 'guest', studentId: null, displayName: 'Guest' };
+            state.activeMessagePartnerId = null;
+            sessionStorage.removeItem('amhs_session');
+            document.getElementById('student-transcript-container').classList.add('hidden');
+            if (state.activeTab === 'admin') switchTab('marks');
+            updateNavCounts();
+            updateSessionUI();
+            renderAll();
+            showToast("Signed out of portal.", "info");
+        }
+
+        function handleChangeAdminPasscode(e) {
+            e.preventDefault();
+            const newPass = document.getElementById('new-admin-passcode').value.trim();
+            if (newPass.length < 4) { showToast("Passcode must be at least 4 characters.", "error"); return; }
+            state.adminPasscode = newPass;
+            localStorage.setItem('amhs_admin_pass', newPass);
+            e.target.reset();
+            showToast("Admin Passcode updated!");
+        }
+
+        function updateSessionUI() {
+            const controls = document.getElementById('session-controls');
+            const roleBadge = document.getElementById('role-badge');
+            const roleDesc = document.getElementById('role-description');
+            const adminNavTab = document.getElementById('nav-tab-admin');
+            const exportLedgerBtn = document.getElementById('export-ledger-btn');
+            const teacherPanels = ['teacher-marks-panel', 'teacher-exam-builder', 'teacher-video-panel', 'teacher-announcement-panel'];
+
+            if (state.session.role === 'teacher') {
+                controls.innerHTML = `<div class="flex items-center gap-2 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-chalkboard-user text-amber-700 text-xs"></i><span class="text-xs font-bold text-amber-950">${escapeHTML(state.session.displayName)}</span><button onclick="logoutSession()" class="ml-1 text-xs font-bold text-red-600 hover:underline">Logout</button></div>`;
+                roleBadge.textContent = "Teacher / Admin";
+                roleBadge.className = "px-2.5 py-0.5 rounded-md bg-amber-400 text-slate-950 font-extrabold uppercase tracking-wider text-[11px]";
+                roleDesc.textContent = "Full administrative access: manage marks, publish exams, upload YouTube lessons, and sync data.";
+                teacherPanels.forEach(id => document.getElementById(id).classList.remove('hidden'));
+                adminNavTab.classList.remove('hidden');
+                exportLedgerBtn.classList.remove('hidden');
+                exportLedgerBtn.classList.add('flex');
+            } else if (state.session.role === 'student') {
+                controls.innerHTML = `<div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-user-graduate text-school-green text-xs"></i><span class="text-xs font-bold text-emerald-950">${escapeHTML(state.session.displayName)} (${escapeHTML(state.session.studentId)})</span><button onclick="logoutSession()" class="ml-1 text-xs font-bold text-red-600 hover:underline">Logout</button></div>`;
+                roleBadge.textContent = "Private Student Session";
+                roleBadge.className = "px-2.5 py-0.5 rounded-md bg-emerald-300 text-slate-950 font-extrabold uppercase tracking-wider text-[11px]";
+                roleDesc.textContent = `Logged in as ${state.session.displayName} (${state.session.studentId}). Only your personal marks, exam attempts, and messages are shown.`;
+                teacherPanels.forEach(id => document.getElementById(id).classList.add('hidden'));
+                adminNavTab.classList.add('hidden');
+                exportLedgerBtn.classList.add('hidden');
+                exportLedgerBtn.classList.remove('flex');
+            } else {
+                controls.innerHTML = `<button onclick="openAuthModal('student')" class="px-3.5 py-2 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5"><i class="fa-solid fa-right-to-bracket"></i><span>${t('studentStaffLogin')}</span></button>`;
+                roleBadge.textContent = "Private Portal";
+                roleBadge.className = "px-2.5 py-0.5 rounded-md bg-white/20 text-white font-extrabold uppercase tracking-wider text-[11px]";
+                roleDesc.textContent = "Student marks are strictly private. Sign in with your Student ID & PIN to view your report card or message classmates.";
+                teacherPanels.forEach(id => document.getElementById(id).classList.add('hidden'));
+                adminNavTab.classList.add('hidden');
+                exportLedgerBtn.classList.add('hidden');
+                exportLedgerBtn.classList.remove('flex');
+            }
+        }
+
+        function switchTab(tabName) {
+            if (tabName === 'admin' && state.session.role !== 'teacher') { openAuthModal('teacher'); return; }
+            state.activeTab = tabName;
+            document.querySelectorAll('.nav-tab').forEach(btn => {
+                if (btn.dataset.tab === tabName) { btn.classList.add('bg-emerald-50', 'text-school-green'); btn.classList.remove('text-slate-600', 'hover:bg-slate-100'); }
+                else { btn.classList.remove('bg-emerald-50', 'text-school-green'); btn.classList.add('text-slate-600', 'hover:bg-slate-100'); }
+            });
+            document.querySelectorAll('.tab-section').forEach(sec => sec.classList.add('hidden'));
+            document.getElementById(`section-${tabName}`).classList.remove('hidden');
+            if (tabName === 'messages') renderMessagingHub();
+            const nav = document.getElementById('main-nav');
+            if (window.innerWidth < 768) { nav.classList.add('hidden'); nav.classList.remove('flex'); }
+        }
+
+        function renderAll() {
+            renderMarksLookupBar();
+            renderStudentDirectory();
+            renderCalculatorControls();
+            updateCalculatorTotals();
+            renderMessagingHub();
+            renderExamsList();
+            renderExamHistory();
+            renderVideosGrid();
+            renderAnnouncements();
+            renderStudyResources();
+        }
+
+        function buildSubjectInputs() {
+            const grid = document.getElementById('subject-inputs-grid');
+            if (!grid) return;
+            grid.innerHTML = SUBJECTS.map(sub => `
+                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">${escapeHTML(sub)}</label>
+                    <input type="number" id="mark-${escapeHTML(sub)}" min="0" max="100" required placeholder="0-100" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-school-green">
+                </div>
+            `).join('');
+        }
+
+        function fillRandomMarks() {
+            SUBJECTS.forEach(sub => {
+                const el = document.getElementById(`mark-${sub}`);
+                if (el) el.value = Math.floor(Math.random() * 41) + 58;
+            });
+        }
+
+        function toggleMarksForm() {
+            const form = document.getElementById('marks-entry-form');
+            const btn = document.getElementById('toggle-marks-form-btn');
+            if (!form || !btn) return;
+            form.classList.toggle('hidden');
+            btn.textContent = form.classList.contains('hidden') ? 'Show Form' : 'Hide Form';
+        }
+
+        function prepareNewStudentForm() {
+            const form = document.getElementById('marks-entry-form');
+            if (form) form.reset();
+            const nums = state.students.map(s => parseInt((s.id.match(/(\d+)$/) || [0, 100])[1], 10)).filter(n => !isNaN(n));
+            const nextNum = (nums.length ? Math.max(...nums) : 108) + 1;
+            const idInput = document.getElementById('form-stu-id');
+            const pinInput = document.getElementById('form-stu-pin');
+            if (idInput) idInput.value = `AMHS-${nextNum}`;
+            if (pinInput) pinInput.value = '1234';
+        }
+
+        function calculateStudentStats(student) {
+            const scores = SUBJECTS.map(sub => Number(student.marks && student.marks[sub]) || 0);
+            const total = scores.reduce((a, b) => a + b, 0);
+            const average = (total / SUBJECTS.length).toFixed(1);
+            const passed = Number(average) >= 50 && scores.every(s => s >= 40);
+            return { total, average: Number(average), passed };
+        }
+
+        function getLetterGrade(score) {
+            if (score >= 90) return { letter: 'A+', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' };
+            if (score >= 80) return { letter: 'A', color: 'text-emerald-600 bg-emerald-50 border-emerald-200' };
+            if (score >= 70) return { letter: 'B', color: 'text-blue-700 bg-blue-50 border-blue-200' };
+            if (score >= 60) return { letter: 'C', color: 'text-amber-700 bg-amber-50 border-amber-200' };
+            if (score >= 50) return { letter: 'D', color: 'text-orange-700 bg-orange-50 border-amber-200' };
+            return { letter: 'F', color: 'text-red-700 bg-red-50 border-red-200' };
+        }
+
+        function renderMarksLookupBar() {
+            const area = document.getElementById('lookup-controls-area');
+            const subtitle = document.getElementById('lookup-subtitle');
+            if (!area) return;
+
+            if (state.session.role === 'teacher') {
+                if (subtitle) subtitle.textContent = "Staff view: Search any student ID or name to inspect their private report card.";
+                area.innerHTML = `<input type="text" id="teacher-stu-search" oninput="renderStudentDirectory()" placeholder="Search Student ID or Name..." class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-school-green">`;
+            } else if (state.session.role === 'student' && state.session.studentId) {
+                if (subtitle) subtitle.textContent = "Showing your personal report card only.";
+                area.innerHTML = `<button type="button" onclick="viewStudentTranscript('${escapeHTML(state.session.studentId)}')" class="px-4 py-2.5 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs sm:text-sm font-bold transition flex items-center gap-2"><i class="fa-solid fa-file-lines"></i><span>${t('viewMyReport')}</span></button>`;
+            } else {
+                if (subtitle) subtitle.textContent = t('guestLookupDesc');
+                area.innerHTML = `<form onsubmit="handleInlinePrivateUnlock(event)" class="flex flex-col sm:flex-row gap-2.5 w-full"><input type="text" id="inline-stu-id" required placeholder="${escapeHTML(t('studentIdPlaceholder'))}" class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm uppercase bg-white focus:ring-2 focus:ring-school-green"><input type="password" id="inline-stu-pin" required placeholder="${escapeHTML(t('pinPlaceholder'))}" class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-school-green"><button type="submit" class="px-4 py-2.5 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs sm:text-sm font-bold transition whitespace-nowrap">${t('unlockMyMarks')}</button></form>`;
+            }
+        }
+
+        function handleInlinePrivateUnlock(e) {
+            e.preventDefault();
+            const idInput = document.getElementById('inline-stu-id').value.trim().toUpperCase();
+            const pinInput = document.getElementById('inline-stu-pin').value.trim();
+            const student = state.students.find(s => s.id.toUpperCase() === idInput);
+            if (!student || (student.pin || "1234") !== pinInput) { showToast("Invalid Student ID or PIN.", "error"); return; }
+            state.session = { role: 'student', studentId: student.id, displayName: student.name };
+            sessionStorage.setItem('amhs_session', JSON.stringify(state.session));
+            updateSessionUI();
+            renderAll();
+            viewStudentTranscript(student.id);
+            showToast(`Unlocked transcript for ${student.name}`);
+        }
+
+        async function handleSaveStudentMarks(e) {
+            e.preventDefault();
+            if (state.session.role !== 'teacher') { openAuthModal('teacher'); return; }
+            const id = document.getElementById('form-stu-id').value.trim().toUpperCase();
+            const name = document.getElementById('form-stu-name').value.trim();
+            const grade = document.getElementById('form-stu-grade').value;
+            const section = document.getElementById('form-stu-section').value;
+            const conduct = document.getElementById('form-stu-conduct').value || 'A';
+            const pin = document.getElementById('form-stu-pin').value.trim() || '1234';
+            const marks = {};
+            SUBJECTS.forEach(sub => { marks[sub] = Math.min(100, Math.max(0, Number(document.getElementById(`mark-${sub}`).value) || 0)); });
+            const idx = state.students.findIndex(s => s.id.toUpperCase() === id);
+            if (idx >= 0) { state.students[idx] = { id, pin, name, grade, section, conduct, marks }; showToast(`Updated marks for ${name} (${id})`); }
+            else { state.students.push({ id, pin, name, grade, section, conduct, marks }); showToast(`Added new student ${name} (${id})`); }
+            await saveAllData();
+            renderAll();
+            viewStudentTranscript(id);
+            e.target.reset();
+        }
+
+        function renderStudentDirectory() {
+            const rosterCard = document.getElementById('student-roster-card');
+            if (!rosterCard) return;
+            if (state.session.role !== 'teacher') { rosterCard.classList.add('hidden'); return; }
+            rosterCard.classList.remove('hidden');
+            const searchEl = document.getElementById('teacher-stu-search');
+            const q = searchEl ? searchEl.value.trim().toLowerCase() : '';
+            const enriched = state.students.map(s => ({ ...s, stats: calculateStudentStats(s) }));
+            const byGrade = {};
+            enriched.forEach(s => { if (!byGrade[s.grade]) byGrade[s.grade] = []; byGrade[s.grade].push(s); });
+            Object.values(byGrade).forEach(list => { list.sort((a, b) => b.stats.total - a.stats.total); list.forEach((stu, idx) => { stu.rank = idx + 1; }); });
+            const filtered = enriched.filter(s => !q || s.id.toLowerCase().includes(q) || s.name.toLowerCase().includes(q) || s.grade.toLowerCase().includes(q)).sort((a, b) => b.stats.total - a.stats.total);
+            document.getElementById('student-count-badge').textContent = `${filtered.length} Students`;
+            document.getElementById('student-roster-tbody').innerHTML = filtered.map(s => `
+                <tr class="hover:bg-slate-50">
+                    <td class="py-3 px-4 font-bold text-slate-700">#${s.rank}</td>
+                    <td class="py-3 px-4 font-mono font-bold text-school-green">${escapeHTML(s.id)}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-900">${escapeHTML(s.name)}</td>
+                    <td class="py-3 px-4 text-slate-600">${escapeHTML(s.grade)} • Sec ${escapeHTML(s.section)}</td>
+                    <td class="py-3 px-4 text-right font-bold text-slate-800">${s.stats.total}</td>
+                    <td class="py-3 px-4 text-right font-bold text-school-green">${s.stats.average}%</td>
+                    <td class="py-3 px-4 text-center"><span class="px-2.5 py-0.5 rounded-full text-xs font-bold ${s.stats.passed ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">${s.stats.passed ? 'PROMOTED' : 'REVIEW'}</span></td>
+                    <td class="py-3 px-4 text-right"><button type="button" onclick="viewStudentTranscript('${escapeHTML(s.id)}')" class="px-3 py-1.5 rounded-lg bg-school-green text-white text-xs font-bold hover:bg-school-greenDark transition">View</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function viewStudentTranscript(studentId) {
+            if (state.session.role === 'guest') { openAuthModal('student'); return; }
+            if (state.session.role === 'student' && state.session.studentId !== studentId) { showToast("Access denied.", "error"); return; }
+            const stu = state.students.find(s => s.id.toUpperCase() === String(studentId).toUpperCase());
+            const container = document.getElementById('student-transcript-container');
+            if (!stu || !container) return;
+            const stats = calculateStudentStats(stu);
+            const sameGrade = state.students.filter(s => s.grade === stu.grade).map(s => ({ id: s.id, total: calculateStudentStats(s).total })).sort((a, b) => b.total - a.total);
+            const rank = sameGrade.findIndex(item => item.id === stu.id) + 1;
+            container.classList.remove('hidden');
+            container.innerHTML = `
+                <div class="bg-gradient-to-r from-school-green to-school-greenDark text-white px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-amber-300">Official Semester Transcript • Agew Midir High School</div>
+                        <h3 class="text-xl sm:text-2xl font-extrabold mt-0.5">${escapeHTML(stu.name)}</h3>
+                        <p class="text-xs sm:text-sm text-emerald-100">ID: <strong>${escapeHTML(stu.id)}</strong> • ${escapeHTML(stu.grade)} • Section ${escapeHTML(stu.section)} • Conduct: ${escapeHTML(stu.conduct || 'A')}</p>
+                    </div>
+                    <div class="flex items-center gap-2 no-print">
+                        <button type="button" onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-extrabold transition"><i class="fa-solid fa-print mr-1"></i>Print</button>
+                        <button type="button" onclick="document.getElementById('student-transcript-container').classList.add('hidden')" class="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition">Close</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 border-b border-slate-200 bg-emerald-50/40">
+                    <div class="p-4 text-center"><div class="text-xs font-bold text-slate-500 uppercase">Total Marks</div><div class="text-2xl font-extrabold text-slate-900 mt-1">${stats.total} <span class="text-xs font-normal text-slate-400">/ 900</span></div></div>
+                    <div class="p-4 text-center"><div class="text-xs font-bold text-slate-500 uppercase">Average</div><div class="text-2xl font-extrabold text-school-green mt-1">${stats.average}%</div></div>
+                    <div class="p-4 text-center"><div class="text-xs font-bold text-slate-500 uppercase">Grade Rank</div><div class="text-2xl font-extrabold text-amber-600 mt-1">#${rank} <span class="text-xs font-normal text-slate-400">of ${sameGrade.length}</span></div></div>
+                    <div class="p-4 text-center"><div class="text-xs font-bold text-slate-500 uppercase">Status</div><div class="mt-1.5"><span class="px-3 py-1 rounded-full text-xs font-extrabold ${stats.passed ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}">${stats.passed ? 'PROMOTED' : 'NEEDS REVIEW'}</span></div></div>
+                </div>
+                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    ${SUBJECTS.map(sub => {
+                        const sc = Number(stu.marks && stu.marks[sub]) || 0;
+                        const gl = getLetterGrade(sc);
+                        return `<div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200"><span class="font-bold text-slate-800 text-sm">${escapeHTML(sub)}</span><div class="flex items-center gap-2"><span class="font-extrabold text-slate-900">${sc}/100</span><span class="w-7 h-7 rounded-lg border flex items-center justify-center text-xs font-extrabold ${gl.color}">${gl.letter}</span></div></div>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function renderCalculatorRows() {
+            const tbody = document.getElementById('calc-subjects-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = calculatorRows.map((row, idx) => {
+                const safeScore = Math.max(0, Number(row.score) || 0);
+                const safeMax = Math.max(1, Number(row.maxScore) || 100);
+                const pct = (safeScore / safeMax) * 100;
+                const gradeInfo = getLetterGrade(pct);
+                return `
+                    <tr class="hover:bg-emerald-50/30 transition">
+                        <td class="py-2.5 px-4 font-bold text-slate-900">${escapeHTML(row.name)}${row.isCustom ? `<span class="ml-1.5 px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-extrabold">Custom</span>` : ''}</td>
+                        <td class="py-2.5 px-4"><input type="number" min="0" max="${safeMax}" step="0.5" value="${safeScore}" oninput="updateCalculatorRow(${idx}, 'score', this.value)" class="w-24 px-2.5 py-1.5 rounded-lg border border-slate-300 text-sm font-bold text-slate-900 bg-white"></td>
+                        <td class="py-2.5 px-4"><input type="number" min="1" max="1000" step="1" value="${safeMax}" oninput="updateCalculatorRow(${idx}, 'maxScore', this.value)" class="w-24 px-2.5 py-1.5 rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 bg-white"></td>
+                        <td class="py-2.5 px-4 text-right font-extrabold text-school-green">${pct.toFixed(1)}%</td>
+                        <td class="py-2.5 px-4 text-center"><span class="inline-flex w-8 h-7 rounded-lg border items-center justify-center text-xs font-extrabold ${gradeInfo.color}">${gradeInfo.letter}</span></td>
+                        <td class="py-2.5 px-4 text-right no-print">${calculatorRows.length > 1 ? `<button type="button" onclick="removeCalculatorRow(${idx})" class="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"><i class="fa-solid fa-trash text-xs"></i></button>` : '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+            updateCalculatorTotals();
+        }
+
+        function updateCalculatorRow(index, field, rawVal) {
+            const row = calculatorRows[index];
+            if (!row) return;
+            const num = Number(rawVal);
+            if (field === 'maxScore') row.maxScore = isNaN(num) || num < 1 ? 1 : num;
+            else row.score = isNaN(num) || num < 0 ? 0 : num;
+            renderCalculatorRows();
+        }
+
+        function removeCalculatorRow(index) {
+            if (calculatorRows.length <= 1) return;
+            calculatorRows.splice(index, 1);
+            renderCalculatorRows();
+        }
+
+        function handleAddCalculatorSubject(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('calc-new-sub-name');
+            const scoreInput = document.getElementById('calc-new-sub-score');
+            const maxInput = document.getElementById('calc-new-sub-max');
+            const name = nameInput.value.trim();
+            if (!name) return;
+            calculatorRows.push({ id: "calc-custom-" + Date.now(), name, score: Math.max(0, Number(scoreInput.value) || 0), maxScore: Math.max(1, Number(maxInput.value) || 100), isCustom: true });
+            nameInput.value = ''; scoreInput.value = '80'; maxInput.value = '100';
+            renderCalculatorRows();
+        }
+
+        function resetCalculatorMarks() {
+            calculatorRows = SUBJECTS.map(sub => ({ id: "calc-" + sub.toLowerCase().replace(/[^a-z0-9]/g, '-'), name: sub, score: 0, maxScore: 100, isCustom: false }));
+            renderCalculatorRows();
+        }
+
+        function fillCalculatorSampleMarks() {
+            const sample = [88, 84, 79, 91, 86, 90, 82, 85, 93];
+            calculatorRows = SUBJECTS.map((sub, i) => ({ id: "calc-" + sub.toLowerCase().replace(/[^a-z0-9]/g, '-'), name: sub, score: sample[i] ?? 80, maxScore: 100, isCustom: false }));
+            renderCalculatorRows();
+        }
+
+        function loadSavedStudentMarksIntoCalculator() {
+            if (state.session.role !== 'student' || !state.session.studentId) { openAuthModal('student'); return; }
+            const stu = state.students.find(s => s.id === state.session.studentId);
+            if (!stu) return;
+            calculatorRows = SUBJECTS.map(sub => ({ id: "calc-" + sub.toLowerCase().replace(/[^a-z0-9]/g, '-'), name: sub, score: Number(stu.marks[sub]) || 0, maxScore: 100, isCustom: false }));
+            renderCalculatorRows();
+        }
+
+        function renderCalculatorControls() {
+            const loadBtn = document.getElementById('calc-load-saved-btn');
+            const applyActions = document.getElementById('calc-apply-actions');
+            if (state.session.role === 'student' && state.session.studentId) {
+                if (loadBtn) { loadBtn.classList.remove('hidden'); loadBtn.classList.add('flex'); }
+                if (applyActions) applyActions.innerHTML = `<button type="button" onclick="loadSavedStudentMarksIntoCalculator()" class="px-3.5 py-2 rounded-xl bg-white border border-emerald-300 text-school-green hover:bg-emerald-100 text-xs font-bold transition"><i class="fa-solid fa-rotate mr-1"></i>${t('calcLoadSaved')}</button><button type="button" onclick="applyCalculatorToMyPrivateRecord()" class="px-4 py-2 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs font-bold transition shadow-xs"><i class="fa-solid fa-floppy-disk mr-1"></i>${t('calcSaveMyRecord')}</button>`;
+            } else {
+                if (loadBtn) { loadBtn.classList.add('hidden'); loadBtn.classList.remove('flex'); }
+                if (applyActions) applyActions.innerHTML = `<button type="button" onclick="openAuthModal('student')" class="px-4 py-2 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs font-bold transition"><i class="fa-solid fa-right-to-bracket mr-1"></i>${t('studentStaffLogin')}</button>`;
+            }
+        }
+
+        async function applyCalculatorToMyPrivateRecord() {
+            if (state.session.role !== 'student' || !state.session.studentId) { openAuthModal('student'); return; }
+            const idx = state.students.findIndex(s => s.id === state.session.studentId);
+            if (idx < 0) return;
+            const updatedMarks = { ...state.students[idx].marks };
+            SUBJECTS.forEach(sub => {
+                const r = calculatorRows.find(row => row.name.toLowerCase() === sub.toLowerCase());
+                if (r) updatedMarks[sub] = Math.min(100, Math.max(0, Math.round(((Math.max(0, Number(r.score) || 0)) / (Math.max(1, Number(r.maxScore) || 100))) * 100)));
+            });
+            state.students[idx] = { ...state.students[idx], marks: updatedMarks };
+            await saveAllData();
+            renderStudentDirectory();
+            viewStudentTranscript(state.students[idx].id);
+            showToast(`Updated private transcript for ${state.students[idx].name}!`);
+        }
+
+        function updateCalculatorTotals() {
+            const totalEarned = calculatorRows.reduce((s, r) => s + (Math.max(0, Number(r.score) || 0)), 0);
+            const totalMax = calculatorRows.reduce((s, r) => s + (Math.max(1, Number(r.maxScore) || 100)), 0);
+            const avgPct = totalMax > 0 ? (totalEarned / totalMax) * 100 : 0;
+            const gradeInfo = getLetterGrade(avgPct);
+
+            document.getElementById('calc-total-score').textContent = Number.isInteger(totalEarned) ? totalEarned : totalEarned.toFixed(1);
+            document.getElementById('calc-max-total').textContent = Number.isInteger(totalMax) ? totalMax : totalMax.toFixed(1);
+            document.getElementById('calc-average-score').textContent = `${avgPct.toFixed(1)}%`;
+            document.getElementById('calc-subject-count').textContent = calculatorRows.length;
+
+            const badgeEl = document.getElementById('calc-letter-badge');
+            badgeEl.textContent = gradeInfo.letter;
+            badgeEl.className = `px-2 py-0.5 rounded-lg border text-xs font-extrabold ${gradeInfo.color}`;
+
+            const statusEl = document.getElementById('calc-status-badge');
+            if (totalEarned === 0) {
+                statusEl.className = "mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-slate-200 text-slate-700";
+                statusEl.innerHTML = `<i class="fa-solid fa-circle-info"></i><span>${t('calcStatusEnter')}</span>`;
+            } else if (avgPct >= 50) {
+                statusEl.className = "mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800";
+                statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>${t('calcStatusPass')}</span>`;
+            } else {
+                statusEl.className = "mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-red-100 text-red-800";
+                statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>${t('calcStatusBelow')}</span>`;
+            }
+
+            const pcts = calculatorRows.map(r => ((Math.max(0, Number(r.score) || 0)) / (Math.max(1, Number(r.maxScore) || 100))) * 100);
+            document.getElementById('calc-highest-lowest').textContent = `High: ${Math.max(...pcts).toFixed(0)}% • Low: ${Math.min(...pcts).toFixed(0)}%`;
+
+            const targetPct = Math.min(100, Math.max(0, Number(document.getElementById('calc-target-pct').value) || 0));
+            const neededTotal = (targetPct / 100) * totalMax;
+            const diff = neededTotal - totalEarned;
+            document.getElementById('calc-target-result').textContent = diff <= 0
+                ? `Target Met! (+${Math.abs(diff).toFixed(1)} pts above ${targetPct}%)`
+                : `Need ${neededTotal.toFixed(1)}/${totalMax} pts (${diff.toFixed(1)} more pts for ${targetPct}%)`;
+        }
+
+        function printCalculatorSummary() {
+            const totalEarned = calculatorRows.reduce((s, r) => s + (Math.max(0, Number(r.score) || 0)), 0);
+            const totalMax = calculatorRows.reduce((s, r) => s + (Math.max(1, Number(r.maxScore) || 100)), 0);
+            const avgPct = totalMax > 0 ? ((totalEarned / totalMax) * 100).toFixed(1) : '0.0';
+            const printWin = window.open('', '_blank', 'width=760,height=640');
+            if (!printWin) { showToast("Please allow pop-ups to print.", "error"); return; }
+            printWin.document.write(`<html><head><title>Mark Summary</title><style>body{font-family:Arial,sans-serif;padding:24px;}table{width:100%;border-collapse:collapse;}th,td{padding:8px;border:1px solid #cbd5e1;}</style></head><body><h2>Agew Midir High School — Mark Summary</h2><p>Total: ${totalEarned}/${totalMax} • Average: ${avgPct}%</p><table><thead><tr><th>Subject</th><th>Score</th><th>Max</th><th>%</th></tr></thead><tbody>${calculatorRows.map(r => `<tr><td>${escapeHTML(r.name)}</td><td>${r.score}</td><td>${r.maxScore}</td><td>${(((Number(r.score)||0)/(Number(r.maxScore)||100))*100).toFixed(1)}%</td></tr>`).join('')}</tbody></table><script>window.onload=function(){window.print();};<\/script></body></html>`);
+            printWin.document.close();
+        }
+
+        function renderMessagingHub() {
+            const promptEl = document.getElementById('messaging-auth-prompt');
+            const inputEl = document.getElementById('msg-body-input');
+            const sendBtn = document.getElementById('msg-send-btn');
+            if (state.session.role === 'student' && state.session.studentId) {
+                promptEl.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-school-green border border-emerald-200 text-xs font-bold"><i class="fa-solid fa-circle-check"></i>Messaging as ${escapeHTML(state.session.displayName)} (${escapeHTML(state.session.studentId)})</span>`;
+                inputEl.disabled = false; sendBtn.disabled = false;
+            } else {
+                promptEl.innerHTML = `<button onclick="openAuthModal('student')" class="px-4 py-2 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-xs font-bold transition flex items-center gap-1.5"><i class="fa-solid fa-right-to-bracket"></i><span>Student Login to Message</span></button>`;
+                inputEl.disabled = true; sendBtn.disabled = true;
+            }
+            renderMessagingContacts();
+            renderMessageThread();
+        }
+
+        function renderMessagingContacts() {
+            const q = (document.getElementById('msg-contact-search')?.value || '').trim().toLowerCase();
+            const currentStuId = state.session.role === 'student' ? state.session.studentId : null;
+            const contacts = state.students.filter(s => (!currentStuId || s.id !== currentStuId) && (!q || s.name.toLowerCase().includes(q) || s.id.toLowerCase().includes(q) || s.grade.toLowerCase().includes(q)));
+            document.getElementById('msg-contacts-count').textContent = `${contacts.length} Students`;
+            if (!state.activeMessagePartnerId && contacts.length > 0) state.activeMessagePartnerId = contacts[0].id;
+            document.getElementById('msg-contacts-list').innerHTML = contacts.map(stu => {
+                const isSelected = state.activeMessagePartnerId === stu.id;
+                const unreadCount = currentStuId ? state.messages.filter(m => m.senderId === stu.id && m.recipientId === currentStuId && !m.read).length : 0;
+                return `<button type="button" onclick="selectMessagePartner('${stu.id}')" class="w-full text-left p-3 rounded-xl border transition flex items-center justify-between gap-2 ${isSelected ? 'bg-emerald-50 border-school-green shadow-sm' : 'bg-white border-slate-200 hover:bg-slate-50'}"><div class="min-w-0"><div class="font-bold text-slate-900 text-sm truncate">${escapeHTML(stu.name)}</div><div class="text-xs text-slate-500">${escapeHTML(stu.grade)} • Sec ${escapeHTML(stu.section)}</div></div>${unreadCount > 0 ? `<span class="px-2 py-0.5 rounded-full bg-red-600 text-white text-[11px] font-extrabold">${unreadCount}</span>` : ''}</button>`;
+            }).join('');
+        }
+
+        function selectMessagePartner(partnerId) {
+            state.activeMessagePartnerId = partnerId;
+            if (state.session.role === 'student' && state.session.studentId) {
+                state.messages.forEach(m => { if (m.senderId === partnerId && m.recipientId === state.session.studentId) m.read = true; });
+                localStorage.setItem('amhs_messages', JSON.stringify(state.messages));
+                updateNavCounts();
+            }
+            renderMessagingContacts();
+            renderMessageThread();
+        }
+
+        function renderMessageThread() {
+            const partner = state.students.find(s => s.id === state.activeMessagePartnerId);
+            const feed = document.getElementById('msg-thread-feed');
+            const clearBtn = document.getElementById('msg-clear-thread-btn');
+            if (!partner) { clearBtn.classList.add('hidden'); return; }
+            document.getElementById('msg-active-partner-name').textContent = partner.name;
+            document.getElementById('msg-active-partner-meta').textContent = `${partner.grade} • Section ${partner.section} • ID: ${partner.id}`;
+
+            if (state.session.role === 'student' && state.session.studentId) {
+                clearBtn.classList.remove('hidden');
+                const myId = state.session.studentId;
+                const threadMsgs = state.messages.filter(m => (m.senderId === myId && m.recipientId === partner.id) || (m.senderId === partner.id && m.recipientId === myId));
+                feed.innerHTML = threadMsgs.length ? threadMsgs.map(m => `<div class="flex flex-col ${m.senderId === myId ? 'items-end' : 'items-start'}"><div class="max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${m.senderId === myId ? 'bg-school-green text-white' : 'bg-white text-slate-800 border border-slate-200'}">${escapeHTML(m.text)}</div><span class="text-[11px] text-slate-400 mt-1">${m.senderId === myId ? 'You' : escapeHTML(m.senderName)} • ${escapeHTML(m.timestamp)}</span></div>`).join('') : `<div class="text-center text-xs text-slate-400 py-10">Start a conversation with ${escapeHTML(partner.name)}.</div>`;
+                feed.scrollTop = feed.scrollHeight;
+            } else {
+                clearBtn.classList.add('hidden');
+                feed.innerHTML = `<div class="text-center text-xs text-slate-500 py-10">Sign in with a Student ID & PIN to view and send messages.</div>`;
+            }
+        }
+
+        async function handleSendStudentMessage(e) {
+            e.preventDefault();
+            if (state.session.role !== 'student' || !state.session.studentId) { openAuthModal('student'); return; }
+            const partner = state.students.find(s => s.id === state.activeMessagePartnerId);
+            const inputEl = document.getElementById('msg-body-input');
+            const text = inputEl.value.trim();
+            if (!partner || !text) return;
+            state.messages.push({ id: "MSG-" + Date.now(), senderId: state.session.studentId, senderName: state.session.displayName, recipientId: partner.id, recipientName: partner.name, text, timestamp: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }), read: false });
+            inputEl.value = '';
+            await saveAllData();
+            renderMessageThread();
+        }
+
+        function clearCurrentThread() {
+            if (state.session.role !== 'student' || !state.session.studentId || !state.activeMessagePartnerId) return;
+            showConfirmModal("Clear Conversation?", "Delete all messages in this thread?", async () => {
+                const myId = state.session.studentId;
+                state.messages = state.messages.filter(m => !((m.senderId === myId && m.recipientId === state.activeMessagePartnerId) || (m.senderId === state.activeMessagePartnerId && m.recipientId === myId)));
+                await saveAllData();
+                renderMessageThread();
+            });
+        }
+
+        function addQuestionField() {
+            questionBuilderCount++;
+            const idx = questionBuilderCount;
+            const card = document.createElement('div');
+            card.className = "builder-q-card bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3";
+            card.innerHTML = `
+                <div class="flex items-center justify-between"><span class="text-xs font-extrabold uppercase text-school-green">Question #${idx}</span>${idx > 1 ? `<button type="button" onclick="this.closest('.builder-q-card').remove()" class="text-xs text-red-600 font-semibold hover:underline">Remove</button>` : ''}</div>
+                <input type="text" required placeholder="Enter exam question text..." class="q-text w-full px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <input type="text" required placeholder="Option A" class="q-opt-0 px-3 py-1.5 rounded-lg border border-slate-300 text-sm bg-white">
+                    <input type="text" required placeholder="Option B" class="q-opt-1 px-3 py-1.5 rounded-lg border border-slate-300 text-sm bg-white">
+                    <input type="text" required placeholder="Option C" class="q-opt-2 px-3 py-1.5 rounded-lg border border-slate-300 text-sm bg-white">
+                    <input type="text" required placeholder="Option D" class="q-opt-3 px-3 py-1.5 rounded-lg border border-slate-300 text-sm bg-white">
+                </div>
+                <div class="flex items-center gap-3"><label class="text-xs font-bold text-slate-700">Correct Answer:</label><select class="q-correct px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold bg-white"><option value="0">Option A</option><option value="1">Option B</option><option value="2">Option C</option><option value="3">Option D</option></select></div>
+            `;
+            document.getElementById('builder-questions-container').appendChild(card);
+        }
+
+        async function handleCreateExam(e) {
+            e.preventDefault();
+            const qCards = document.querySelectorAll('.builder-q-card');
+            if (!qCards.length) return;
+            const questions = Array.from(qCards).map(card => ({
+                q: card.querySelector('.q-text').value.trim(),
+                options: [0, 1, 2, 3].map(i => card.querySelector(`.q-opt-${i}`).value.trim()),
+                answer: Number(card.querySelector('.q-correct').value)
+            }));
+            state.exams.unshift({
+                id: "EXAM-" + Date.now(),
+                title: document.getElementById('exam-title').value.trim(),
+                subject: document.getElementById('exam-subject').value,
+                grade: document.getElementById('exam-grade').value,
+                duration: Number(document.getElementById('exam-duration').value) || 15,
+                date: document.getElementById('exam-date').value,
+                description: document.getElementById('exam-desc').value.trim() || "Complete all questions before time expires.",
+                questions
+            });
+            await saveAllData();
+            renderExamsList();
+            e.target.reset();
+            document.getElementById('builder-questions-container').innerHTML = '';
+            questionBuilderCount = 0;
+            addQuestionField();
+            showToast("Published new online exam!");
+        }
+
+        function deleteExam(examId) {
+            showConfirmModal("Delete Exam?", "Remove this exam?", async () => {
+                state.exams = state.exams.filter(ex => ex.id !== examId);
+                await saveAllData();
+                renderExamsList();
+            });
+        }
+
+        function renderExamsList() {
+            const gradeFilter = document.getElementById('exam-grade-filter').value;
+            const filtered = state.exams.filter(ex => gradeFilter === 'ALL' || ex.grade === gradeFilter);
+            document.getElementById('exams-grid').innerHTML = filtered.map(ex => `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-extrabold bg-emerald-50 text-school-green">${escapeHTML(ex.subject)}</span>
+                            <div class="flex items-center gap-1"><span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700">${escapeHTML(ex.grade)}</span>${state.session.role === 'teacher' ? `<button onclick="deleteExam('${ex.id}')" class="p-2 text-slate-400 hover:text-red-600"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}</div>
+                        </div>
+                        <h3 class="font-extrabold text-slate-900 text-base mb-2">${escapeHTML(ex.title)}</h3>
+                        <p class="text-xs text-slate-500 mb-4">${escapeHTML(ex.description)}</p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 space-y-3">
+                        <div class="flex items-center justify-between text-xs text-slate-600 font-semibold"><span>${ex.questions.length} Qs</span><span>${ex.duration} Mins</span><span>${escapeHTML(ex.date)}</span></div>
+                        <button onclick="startExam('${ex.id}')" class="w-full py-2.5 px-4 rounded-xl bg-school-green hover:bg-school-greenDark text-white text-sm font-bold transition">Start Online Exam</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function startExam(examId) {
+            const exam = state.exams.find(e => e.id === examId);
+            if (!exam) return;
+            if (activeExamTimer) clearInterval(activeExamTimer);
+            const runner = document.getElementById('active-exam-runner');
+            runner.classList.remove('hidden');
+            let secondsRemaining = exam.duration * 60;
+            const defaultStuId = state.session.studentId || '';
+            const defaultStuName = state.session.role === 'student' ? state.session.displayName : '';
+
+            runner.innerHTML = `
+                <div class="bg-school-green text-white px-6 py-4 flex items-center justify-between">
+                    <div><span class="text-xs uppercase text-amber-300 font-extrabold">${escapeHTML(exam.subject)} • ${escapeHTML(exam.grade)}</span><h3 class="text-lg font-extrabold">${escapeHTML(exam.title)}</h3></div>
+                    <div class="flex items-center gap-3"><span id="exam-timer-display" class="px-3 py-1.5 rounded-xl bg-white/15 font-mono font-bold text-sm">${formatTime(secondsRemaining)}</span><button onclick="cancelActiveExam()" class="px-3 py-1.5 rounded-xl bg-red-600 text-xs font-bold">Exit</button></div>
+                </div>
+                <form id="submit-exam-form" onsubmit="submitExamAttempt(event, '${exam.id}')" class="p-6 space-y-5">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+                        <input type="text" id="taker-student-id" required value="${escapeHTML(defaultStuId)}" placeholder="Student ID (e.g., AMHS-101)" class="px-3.5 py-2 rounded-lg border border-slate-300 text-sm uppercase bg-white">
+                        <input type="text" id="taker-student-name" required value="${escapeHTML(defaultStuName)}" placeholder="Full Name" class="px-3.5 py-2 rounded-lg border border-slate-300 text-sm bg-white">
+                    </div>
+                    ${exam.questions.map((qObj, qIdx) => `<div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2"><p class="font-bold text-sm">Q${qIdx + 1}. ${escapeHTML(qObj.q)}</p><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${qObj.options.map((opt, optIdx) => `<label class="flex items-center gap-2 p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer text-sm"><input type="radio" name="exam-q-${qIdx}" value="${optIdx}"><span>${escapeHTML(opt)}</span></label>`).join('')}</div></div>`).join('')}
+                    <div class="flex justify-end"><button type="submit" class="px-6 py-3 rounded-xl bg-school-green text-white font-extrabold text-sm">Submit & Grade Exam</button></div>
+                </form>
+            `;
+            runner.scrollIntoView({ behavior: 'smooth' });
+            activeExamTimer = setInterval(() => {
+                secondsRemaining--;
+                const el = document.getElementById('exam-timer-display');
+                if (el) el.textContent = formatTime(secondsRemaining);
+                if (secondsRemaining <= 0) { clearInterval(activeExamTimer); document.getElementById('submit-exam-form').requestSubmit(); }
+            }, 1000);
+        }
+
+        function formatTime(secs) {
+            const m = Math.floor(Math.max(0, secs) / 60);
+            const s = Math.max(0, secs) % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function cancelActiveExam() {
+            if (activeExamTimer) clearInterval(activeExamTimer);
+            document.getElementById('active-exam-runner').classList.add('hidden');
+        }
+
+        async function submitExamAttempt(e, examId) {
+            e.preventDefault();
+            if (activeExamTimer) clearInterval(activeExamTimer);
+            const exam = state.exams.find(ex => ex.id === examId);
+            if (!exam) return;
+            const studentId = document.getElementById('taker-student-id').value.trim().toUpperCase();
+            const studentName = document.getElementById('taker-student-name').value.trim();
+            let correctCount = 0;
+            exam.questions.forEach((qObj, idx) => {
+                const sel = document.querySelector(`input[name="exam-q-${idx}"]:checked`);
+                if (sel && Number(sel.value) === qObj.answer) correctCount++;
+            });
+            const totalQ = exam.questions.length;
+            const percentage = Math.round((correctCount / totalQ) * 100);
+            state.examAttempts.unshift({ studentId, studentName, examId: exam.id, examTitle: exam.title, subject: exam.subject, score: `${correctCount} / ${totalQ}`, percentage, date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) });
+            await saveAllData();
+            renderExamHistory();
+            document.getElementById('active-exam-runner').innerHTML = `<div class="p-8 text-center space-y-3"><h3 class="text-2xl font-extrabold text-slate-900">${escapeHTML(studentName)} (${escapeHTML(studentId)})</h3><p class="text-sm text-slate-500">${escapeHTML(exam.title)}</p><div class="text-2xl font-extrabold text-school-green">${correctCount} / ${totalQ} (${percentage}%)</div><button onclick="cancelActiveExam()" class="px-6 py-2.5 rounded-xl bg-school-green text-white text-sm font-bold">Done</button></div>`;
+        }
+
+        function renderExamHistory() {
+            const filterSelect = document.getElementById('ledger-exam-filter');
+            const tbody = document.getElementById('exam-history-tbody');
+            const currentVal = filterSelect.value;
+            filterSelect.innerHTML = `<option value="ALL">All Exams</option>` + state.exams.map(ex => `<option value="${escapeHTML(ex.title)}">${escapeHTML(ex.title)}</option>`).join('');
+            filterSelect.value = currentVal || 'ALL';
+            if (state.session.role === 'guest') {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-500 text-xs">Sign in as a Student to view your private exam attempts.</td></tr>`;
+                return;
+            }
+            const filtered = state.examAttempts.filter(att => (filterSelect.value === 'ALL' || att.examTitle === filterSelect.value) && (state.session.role !== 'student' || att.studentId === state.session.studentId));
+            tbody.innerHTML = filtered.length ? filtered.map(att => `<tr class="hover:bg-slate-50"><td class="py-3 px-4 font-bold"><span class="font-mono text-school-green mr-1">${escapeHTML(att.studentId)}</span>${escapeHTML(att.studentName)}</td><td class="py-3 px-4">${escapeHTML(att.examTitle)}</td><td class="py-3 px-4">${escapeHTML(att.subject)}</td><td class="py-3 px-4 text-right font-bold">${escapeHTML(att.score)}</td><td class="py-3 px-4 text-right font-bold text-school-green">${att.percentage}%</td><td class="py-3 px-4 text-right text-xs text-slate-500">${escapeHTML(att.date)}</td></tr>`).join('') : `<tr><td colspan="6" class="py-6 text-center text-slate-400 text-xs">No attempts recorded.</td></tr>`;
+        }
+
+        function extractYouTubeID(url) {
+            const match = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+            return match ? match[1] : null;
+        }
+
+        async function handleAddVideo(e) {
+            e.preventDefault();
+            const youtubeId = extractYouTubeID(document.getElementById('video-url').value.trim());
+            if (!youtubeId) { showToast("Invalid YouTube URL.", "error"); return; }
+            state.videos.unshift({
+                id: "VID-" + Date.now(),
+                title: document.getElementById('video-title').value.trim(),
+                subject: document.getElementById('video-subject').value,
+                grade: document.getElementById('video-grade').value,
+                type: document.getElementById('video-type').value,
+                youtubeId,
+                notes: document.getElementById('video-notes').value.trim() || "Agew Midir High School Academic Resource"
+            });
+            await saveAllData();
+            renderVideosGrid();
+            e.target.reset();
+            showToast("Added YouTube lesson!");
+        }
+
+        function deleteVideo(videoId) {
+            showConfirmModal("Remove Video?", "Delete this video?", async () => {
+                state.videos = state.videos.filter(v => v.id !== videoId);
+                await saveAllData();
+                renderVideosGrid();
+            });
+        }
+
+        function renderVideosGrid() {
+            const subF = document.getElementById('video-subject-filter').value;
+            const grdF = document.getElementById('video-grade-filter').value;
+            const typF = document.getElementById('video-type-filter').value;
+            const filtered = state.videos.filter(v => (subF === 'ALL' || v.subject === subF) && (grdF === 'ALL' || v.grade === grdF || v.grade === 'All Grades') && (typF === 'ALL' || (v.type || 'Lecture') === typF));
+            document.getElementById('videos-grid').innerHTML = filtered.map(v => `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="relative w-full aspect-video bg-slate-900">
+                        <iframe class="w-full h-full" src="https://www.youtube.com/embed/${escapeHTML(v.youtubeId)}" title="${escapeHTML(v.title)}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+                    </div>
+                    <div class="p-4 flex-1">
+                        <div class="flex items-center justify-between gap-2 mb-2">
+                            <div class="flex flex-wrap gap-1.5"><span class="px-2 py-0.5 rounded bg-red-50 text-red-700 text-[11px] font-extrabold">${escapeHTML(v.subject)}</span><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[11px] font-bold">${escapeHTML(v.grade)}</span></div>
+                            ${state.session.role === 'teacher' ? `<button onclick="deleteVideo('${v.id}')" class="text-slate-400 hover:text-red-600"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
+                        </div>
+                        <h3 class="font-extrabold text-slate-900 text-sm mb-1">${escapeHTML(v.title)}</h3>
+                        <p class="text-xs text-slate-500">${escapeHTML(v.notes)}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function handleAddAnnouncement(e) {
+            e.preventDefault();
+            state.announcements.unshift({
+                id: "ANN-" + Date.now(),
+                title: document.getElementById('ann-title').value.trim(),
+                category: document.getElementById('ann-category').value,
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                content: document.getElementById('ann-content').value.trim(),
+                link: document.getElementById('ann-link').value.trim()
+            });
+            await saveAllData();
+            renderAnnouncements();
+            e.target.reset();
+            showToast("Published notice!");
+        }
+
+        function deleteAnnouncement(annId) {
+            showConfirmModal("Delete Notice?", "Remove this notice?", async () => {
+                state.announcements = state.announcements.filter(a => a.id !== annId);
+                await saveAllData();
+                renderAnnouncements();
+            });
+        }
+
+        function renderAnnouncements() {
+            document.getElementById('announcements-list').innerHTML = state.announcements.map(ann => `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-2">
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-school-green">${escapeHTML(ann.category)}</span><span class="text-xs text-slate-400">${escapeHTML(ann.date)}</span></div>${state.session.role === 'teacher' ? `<button onclick="deleteAnnouncement('${ann.id}')" class="text-slate-400 hover:text-red-600"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}</div>
+                    <h3 class="font-extrabold text-slate-900 text-base">${escapeHTML(ann.title)}</h3>
+                    <p class="text-sm text-slate-600">${escapeHTML(ann.content)}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderStudyResources() {
+            document.getElementById('study-resources-list').innerHTML = STUDY_NOTES.map((note, idx) => `
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
+                    <div class="min-w-0"><div class="text-xs font-extrabold text-school-green">${escapeHTML(note.subject)}</div><div class="text-sm font-bold text-slate-800 truncate">${escapeHTML(note.title)}</div><div class="text-xs text-slate-400">${escapeHTML(note.size)}</div></div>
+                    <button onclick="downloadStudyNote(${idx})" class="w-9 h-9 rounded-xl bg-white border border-slate-200 hover:bg-emerald-50 text-slate-600 flex items-center justify-center"><i class="fa-solid fa-download text-sm"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function downloadStudyNote(index) {
+            const note = STUDY_NOTES[index];
+            if (!note) return;
+            triggerDownload(`AGEW MIDIR HIGH SCHOOL (INJIBARA)\n${note.title}\nSubject: ${note.subject}\n`, `${note.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`, 'text/plain;charset=utf-8');
+        }
+
+        function triggerDownload(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportStudentsCSV() {
+            const headers = ["StudentID", "PIN", "FullName", "Grade", "Section", "Conduct", ...SUBJECTS, "Total", "Average"];
+            const rows = state.students.map(s => {
+                const stats = calculateStudentStats(s);
+                return [s.id, s.pin || "1234", `"${(s.name || '').replace(/"/g, '""')}"`, s.grade, s.section, s.conduct || "A", ...SUBJECTS.map(sub => s.marks[sub] ?? 0), stats.total, stats.average].join(',');
+            });
+            triggerDownload([headers.join(','), ...rows].join('\n'), `Agew_Midir_Gradebook.csv`, 'text/csv;charset=utf-8');
+        }
+
+        function downloadSampleCSVTemplate() {
+            const headers = ["StudentID", "PIN", "FullName", "Grade", "Section", "Conduct", ...SUBJECTS];
+            triggerDownload([headers.join(','), ["AMHS-201", "1234", "Abebe Kebede", "Grade 12", "A", "A", 88, 85, 82, 90, 86, 91, 84, 87, 92].join(',')].join('\n'), "Agew_Midir_Marks_Template.csv", "text/csv;charset=utf-8");
+        }
+
+        function handleCSVUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                const lines = ev.target.result.split(/\r?\n/).filter(l => l.trim());
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                    if (!cols || cols.length < 15) continue;
+                    const clean = cols.map(c => c.replace(/^"|"$/g, '').trim());
+                    const id = clean[0].toUpperCase();
+                    const marks = {};
+                    SUBJECTS.forEach((sub, idx) => { marks[sub] = Math.min(100, Math.max(0, Number(clean[6 + idx]) || 0)); });
+                    const existing = state.students.findIndex(s => s.id === id);
+                    const rec = { id, pin: clean[1] || "1234", name: clean[2], grade: clean[3] || "Grade 12", section: clean[4] || "A", conduct: clean[5] || "A", marks };
+                    if (existing >= 0) state.students[existing] = rec; else state.students.push(rec);
+                }
+                await saveAllData(); renderAll(); showToast("Imported CSV records!");
+                e.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function exportExamLedgerCSV() {
+            const headers = ["StudentID", "StudentName", "ExamTitle", "Subject", "Score", "Percentage", "Date"];
+            const rows = state.examAttempts.map(a => [a.studentId || "N/A", `"${(a.studentName || '').replace(/"/g, '""')}"`, `"${(a.examTitle || '').replace(/"/g, '""')}"`, a.subject, `"${a.score}"`, `${a.percentage}%`, `"${a.date}"`].join(','));
+            triggerDownload([headers.join(','), ...rows].join('\n'), `Agew_Midir_Exam_Results.csv`, 'text/csv;charset=utf-8');
+        }
+
+        function exportFullDatabaseJSON() {
+            triggerDownload(JSON.stringify({ students: state.students, exams: state.exams, examAttempts: state.examAttempts, videos: state.videos, announcements: state.announcements, messages: state.messages }, null, 2), `Agew_Midir_Backup.json`, 'application/json');
+        }
+
+        function handleJSONImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const parsed = JSON.parse(ev.target.result);
+                    if (Array.isArray(parsed.students)) state.students = parsed.students;
+                    if (Array.isArray(parsed.exams)) state.exams = parsed.exams;
+                    if (Array.isArray(parsed.examAttempts)) state.examAttempts = parsed.examAttempts;
+                    if (Array.isArray(parsed.videos)) state.videos = parsed.videos;
+                    if (Array.isArray(parsed.announcements)) state.announcements = parsed.announcements;
+                    if (Array.isArray(parsed.messages)) state.messages = parsed.messages;
+                    await saveAllData(); renderAll(); showToast("Restored backup!");
+                } catch (err) { showToast("Invalid JSON file.", "error"); }
+                e.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        function escapeHTML(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
